@@ -46,7 +46,7 @@ export function AddPatientModal({ onClose, onAddPatient }: AddPatientModalProps)
     setFormData({ ...formData, contact: formatted });
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = (e: React.FormEvent) => {
   e.preventDefault();
 
   if (!formData.name || !formData.age || !formData.contact || !formData.diagnosis) {
@@ -60,38 +60,19 @@ const handleSubmit = async (e: React.FormEvent) => {
     return;
   }
 
-  try {
-    const response = await fetch("http://localhost:5000/api/patients", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name: formData.name,
-        age: Number(formData.age),
-        gender: formData.gender,
-        contact: formData.contact,
-        diagnosis: formData.diagnosis,
-        lastVisitDate: formData.lastVisit,
-        nextCheckupDate: formData.nextCheckup,
-        status: formData.status
-      })
-    });
+  // Send only form data to parent
+  onAddPatient({
+    name: formData.name,
+    age: Number(formData.age),
+    gender: formData.gender,
+    contact: formData.contact,
+    diagnosis: formData.diagnosis,
+    lastVisit: formData.lastVisit,
+    nextCheckup: formData.nextCheckup,
+    status: formData.status
+  });
 
-    const savedPatient = await response.json();
-
-    console.log("Saved to DB:", savedPatient);
-
-    // Keep UI working for now
-    onAddPatient(savedPatient);
-
-    alert("Patient added successfully");
-    onClose();
-
-  } catch (error) {
-    console.error(error);
-    alert("Server error");
-  }
+  onClose();
 };
 
 

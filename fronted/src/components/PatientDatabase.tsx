@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 import { Search, Eye, Calendar, AlertCircle, Edit, Trash2 } from 'lucide-react';
-import { Patient } from './mockData';
+// import { Patient } from './mockData';
 
 interface Patient {
-  patient_id: string;
-  patient_name: string;
+  id: string;
+  patientCode: string;
+  name: string;
   age: number;
   gender: string;
-  contact: string;
-  diagnosis: string;
-  total_visits: number;
-  created_at: string;
-  patientCode: string;
+  contact?: string;
+  diagnosis?: string;
+  lastVisit?: string | null;
+  nextCheckup?: string | null;
+  status?: "active" | "discharged";
+  totalVisits?: number;
 }
 
 interface PatientDatabaseProps {
@@ -25,31 +27,40 @@ export function PatientDatabase({ onViewPatient, patients, onEditPatient, onDele
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'overdue' | 'discharged'>('all');
 
-  const filteredPatients = patients.filter(patient => {
-    const matchesSearch = 
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.diagnosis.toLowerCase().includes(searchTerm.toLowerCase());
+const filteredPatients = patients.filter((patient) => {
+  const name = patient.name?.toLowerCase() || "";
+  const id = patient.id?.toLowerCase() || "";
+  const diagnosis = patient.diagnosis?.toLowerCase() || "";
+  const search = searchTerm.toLowerCase();
 
-    if (!matchesSearch) return false;
+  const matchesSearch =
+    name.includes(search) ||
+    id.includes(search) ||
+    diagnosis.includes(search);
 
-    if (filterStatus === 'all') return true;
+  if (!matchesSearch) return false;
 
-    if (filterStatus === 'discharged') {
-      return patient.status === 'discharged';
-    }
+  if (filterStatus === "all") return true;
 
-    const today = new Date();
-    const checkupDate = patient.nextCheckup ? new Date(patient.nextCheckup) : null;
+  if (filterStatus === "discharged") {
+    return patient.status === "discharged";
+  }
 
-    if (filterStatus === 'upcoming') {
-      return checkupDate && checkupDate >= today && patient.status !== 'discharged';
-    } else if (filterStatus === 'overdue') {
-      return checkupDate && checkupDate < today && patient.status !== 'discharged';
-    }
+  const today = new Date();
+  const checkupDate = patient.nextCheckup
+    ? new Date(patient.nextCheckup)
+    : null;
 
-    return true;
-  });
+  if (filterStatus === "upcoming") {
+    return checkupDate && checkupDate >= today && patient.status !== "discharged";
+  }
+
+  if (filterStatus === "overdue") {
+    return checkupDate && checkupDate < today && patient.status !== "discharged";
+  }
+
+  return true;
+});
 
   const getStatusBadge = (nextCheckup: string | null, status?: 'active' | 'discharged') => {
     if (status === 'discharged') {

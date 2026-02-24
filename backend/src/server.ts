@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db";
+import patientRoutes from "./routes/patientRoutes";
 
 dotenv.config();
 
@@ -11,6 +12,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/patients", patientRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend API Running");

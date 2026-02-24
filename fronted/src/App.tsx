@@ -10,7 +10,7 @@ import { AddPatientModal } from './components/AddPatientModal';
 import { EditPatientModal } from './components/EditPatientModal';
 import { LayoutDashboard, LogOut, Activity, Users, Calculator, UserPlus } from 'lucide-react';
 import { mockPatients, mockAlgometerReadings, Patient, AlgometerReading } from './components/mockData';
-import { toast, Toaster } from 'sonner@2.0.3';
+import { toast, Toaster } from 'sonner';
 
 // function App() {
 //   return (
@@ -130,8 +130,45 @@ export default function App() {
     setSelectedPatientId(null);
   };
 
-  const handleAddPatient = (newPatient: Patient) => {
-  setPatients(prev => [...prev, newPatient]);
+  const handleAddPatient = async (newPatient: any) => {
+  try {
+    const res = await fetch("http://localhost:5000/api/patients", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(newPatient)
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to save patient");
+    }
+
+    const saved = await res.json();
+
+    const formatted = {
+      id: saved._id,
+      patientCode: saved.patientCode,
+      name: saved.name,
+      age: saved.age,
+      gender: saved.gender,
+      contact: saved.contact,
+      diagnosis: saved.diagnosis,
+      lastVisit: saved.lastVisitDate,
+      nextCheckup: saved.nextCheckupDate,
+      status: saved.status,
+      totalVisits: 0,
+      hasReadings: false
+    };
+
+    setPatients(prev => [...prev, formatted]);
+
+    toast.success("Patient saved to database");
+
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to save patient");
+  }
 };
 
 
