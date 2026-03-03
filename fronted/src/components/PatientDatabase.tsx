@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Search, Eye, Calendar, AlertCircle, Edit, Trash2 } from 'lucide-react';
+import { RefreshCw } from "lucide-react";
 // import { Patient } from './mockData';
 
 interface Patient {
@@ -16,14 +17,36 @@ interface Patient {
   totalVisits?: number;
 }
 
+// Old Before Refresh button
+// interface PatientDatabaseProps {
+//   onViewPatient: (patientId: string) => void;
+//   patients: Patient[];
+//   onEditPatient?: (patientId: string) => void;
+//   onDeletePatient?: (patientId: string) => void;
+// }
+
+//After refresh button
 interface PatientDatabaseProps {
   onViewPatient: (patientId: string) => void;
   patients: Patient[];
   onEditPatient?: (patientId: string) => void;
   onDeletePatient?: (patientId: string) => void;
+  onRefresh?: () => void;
+  isRefreshing?:boolean;
 }
 
-export function PatientDatabase({ onViewPatient, patients, onEditPatient, onDeletePatient }: PatientDatabaseProps) {
+//Before Refresh button
+// export function PatientDatabase({ onViewPatient, patients, onEditPatient, onDeletePatient }: PatientDatabaseProps) 
+
+//After Refresh Button
+export function PatientDatabase({ 
+  onViewPatient, 
+  patients, 
+  onEditPatient, 
+  onDeletePatient,
+  onRefresh,
+  isRefreshing
+}: PatientDatabaseProps){
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'overdue' | 'discharged'>('all');
 
@@ -87,7 +110,23 @@ const filteredPatients = patients.filter((patient) => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-gray-900">Patient Database</h2>
+        {/* <h2 className="text-gray-900">Patient Database</h2> */}
+        <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Patient Database</h1>
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              title="Refresh patients"
+              className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <RefreshCw
+                className={`w-5 h-5 ${
+                  isRefreshing ? "animate-spin [animation-duration:1.8s] ease-in-out" : ""
+                }`}
+              />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Search and Filters */}

@@ -32,28 +32,65 @@ export default function App() {
   
   // State for patients and readings
   const [patients, setPatients] = useState<Patient[]>([]);
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchPatients = async () => {
+  try {
+
+    setIsRefreshing(true);
+
+    const res = await fetch("http://localhost:5000/api/patients");
+    const data = await res.json();
+
+    const formatted = data.map((p: any) => ({
+      id: p._id,
+      patientCode: p.patientCode,
+      name: p.name,
+      age: p.age,
+      gender: p.gender,
+      contact: p.contact,
+      diagnosis: p.diagnosis,
+      lastVisit: p.lastVisitDate,
+      nextCheckup: p.nextCheckupDate,
+      status: p.status || "active",
+      totalVisits: 0,
+      hasReadings: false
+    }));
+
+    setPatients(formatted);
+  } catch (error) {
+    console.error("Failed to fetch patients", error);
+  }finally{
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 500);
+  }
+};
+
   useEffect(() => {
-  fetch("http://localhost:5000/api/patients")
-    .then(res => res.json())
-    .then(data => {
-      const formatted = data.map((p: any) => ({
-  id: p._id,                 // internal MongoDB id (used for edit/delete)
-  patientCode: p.patientCode, // <-- ADD THIS
-  name: p.name,
-  age: p.age,
-  gender: p.gender,
-  contact: p.contact,
-  diagnosis: p.diagnosis,
-  lastVisit: p.lastVisitDate,
-  nextCheckup: p.nextCheckupDate,
-  status: p.status || "active",
-  totalVisits: 0,
-  hasReadings: false
-}));
-      setPatients(formatted);
-    })
-    .catch(err => console.error("Failed to fetch patients", err));
-}, []);
+//   fetch("http://localhost:5000/api/patients")
+//     .then(res => res.json())
+//     .then(data => {
+//       const formatted = data.map((p: any) => ({
+//   id: p._id,                 // internal MongoDB id (used for edit/delete)
+//   patientCode: p.patientCode, // <-- ADD THIS
+//   name: p.name,
+//   age: p.age,
+//   gender: p.gender,
+//   contact: p.contact,
+//   diagnosis: p.diagnosis,
+//   lastVisit: p.lastVisitDate,
+//   nextCheckup: p.nextCheckupDate,
+//   status: p.status || "active",
+//   totalVisits: 0,
+//   hasReadings: false
+// }));
+//       setPatients(formatted);
+//     })
+//     .catch(err => console.error("Failed to fetch patients", err));
+      fetchPatients();
+    }, []);
 
   const [readings, setReadings] = useState<AlgometerReading[]>(mockAlgometerReadings);
 
@@ -481,15 +518,26 @@ const handleEditPatient = async (updatedPatient: Patient) => {
             <Dashboard />
           )}
           {currentPage === 'patients' && (
-            <PatientDatabase 
-              onViewPatient={handleViewPatient}
-              patients={patients}
-              onEditPatient={(patientId) => {
-                setEditingPatientId(patientId);
-                setShowEditPatientModal(true);
-              }}
-              onDeletePatient={handleDeletePatient}
-            />
+            // <PatientDatabase 
+            //   onViewPatient={handleViewPatient}
+            //   patients={patients}
+            //   onEditPatient={(patientId) => {
+            //     setEditingPatientId(patientId);
+            //     setShowEditPatientModal(true);
+            //   }}
+            //   onDeletePatient={handleDeletePatient}
+            // />
+                <PatientDatabase 
+                  onViewPatient={handleViewPatient}
+                  patients={patients}
+                  onEditPatient={(patientId) => {
+                    setEditingPatientId(patientId);
+                    setShowEditPatientModal(true);
+                  }}
+                  onDeletePatient={handleDeletePatient}
+                  onRefresh={fetchPatients}
+                  isRefreshing={isRefreshing}
+                />
           )}
           {currentPage === 'converter' && <UnitConverter />}
           {currentPage === 'readings' && (

@@ -10,15 +10,16 @@ interface EditPatientModalProps {
 
 export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatientModalProps) {
   const [formData, setFormData] = useState({
-    name: patient.name,
-    age: patient.age.toString(),
-    gender: patient.gender,
-    contact: patient.contact,
-    diagnosis: patient.diagnosis,
-    lastVisit: patient.lastVisit,
-    nextCheckup: patient.nextCheckup || '',
-    status: patient.status || 'active',
-    photo: patient.photo || ''
+    name: patient.name || "",
+    // age: patient.age.toString(),
+    age: patient.age || "",
+    gender: patient.gender || "Male",
+    contact: patient.contact || "",
+    diagnosis: patient.diagnosis || "",
+    lastVisit: patient.lastVisit || "",
+    nextCheckup: patient.nextCheckup || "",
+    status: patient.status || "active",
+    photo: patient.photo || ""
   });
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,7 +126,7 @@ export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatien
               </label>
               <input
                 type="text"
-                value={formData.name}
+                value={formData.name ?? ""}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Rajesh Kumar"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -140,7 +141,7 @@ export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatien
               </label>
               <input
                 type="number"
-                value={formData.age}
+                value={formData.age ?? ""}
                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                 placeholder="e.g., 45"
                 min="1"
@@ -156,7 +157,7 @@ export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatien
                 Gender <span className="text-red-500">*</span>
               </label>
               <select
-                value={formData.gender}
+                value={formData.gender ?? ""}
                 onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
@@ -174,7 +175,7 @@ export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatien
               </label>
               <input
                 type="tel"
-                value={formData.contact}
+                value={formData.contact ?? ""}
                 onChange={handlePhoneChange}
                 placeholder="+91-98765-43210"
                 pattern="\+91-\d{5}-\d{5}"
@@ -190,7 +191,7 @@ export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatien
                 Diagnosis <span className="text-red-500">*</span>
               </label>
               <textarea
-                value={formData.diagnosis}
+                value={formData.diagnosis ?? ""}
                 onChange={(e) => setFormData({ ...formData, diagnosis: e.target.value })}
                 placeholder="e.g., Chronic TMJ Disorder"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y"
@@ -205,7 +206,7 @@ export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatien
               </label>
               <input
                 type="date"
-                value={formData.lastVisit}
+                value={formData.lastVisit ?? ""}
                 onChange={(e) => setFormData({ ...formData, lastVisit: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
@@ -214,12 +215,12 @@ export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatien
 
             {/* Next Checkup */}
             <div>
-              <label className="block text-gray-700 mb-2">
+              <label className= "block text-gray-700 mb-2">
                 Next Checkup Date
               </label>
               <input
                 type="date"
-                value={formData.nextCheckup}
+                value={formData.nextCheckup ?? ""}
                 onChange={(e) => setFormData({ ...formData, nextCheckup: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -231,7 +232,7 @@ export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatien
                 Patient Status <span className="text-red-500">*</span>
               </label>
               <select
-                value={formData.status}
+                value={formData.status ?? ""}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'discharged' })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required

@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db";
 import patientRoutes from "./routes/patientRoutes";
+import readingRoutes from "./routes/readingRoutes";
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api/patients", patientRoutes);
+app.use("/api/readings", readingRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend API Running");
