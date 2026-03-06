@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { X, Plus, Save, Check, XCircle, User, Divide } from 'lucide-react';
-import { Patient, AlgometerReading, LocationReading } from './mockData';
+// import { Patient, AlgometerReading, LocationReading } from './mockData';
 import ReadingTable from './ReadingTable';
-
-
+import { Patient, AlgometerReading, LocationReading } from '../types/algometer';
 interface AlgometerReadingInterfaceProps {
   onClose: () => void;
   onSave: (reading: Omit<AlgometerReading, 'id' | 'timestamp'>) => void;
@@ -39,39 +38,18 @@ export function AlgometerReadingInterface({
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     existingReading?.patientId || preSelectedPatientId || ''
   );
-  const [readings, setReadings] = useState<LocationReading[]>(
-    existingReading?.readings || []
-  );
+
   const [doctorNotes, setDoctorNotes] = useState(existingReading?.doctorNotes || '');
-  const [newLocation, setNewLocation] = useState('');
+
+  type FirebaseReading = {
+  muscle: string;
+  pointPressureThreshold: number;
+  pointPressureTolerance: number;
+  };
+
+  const [sessionReadings, setSessionReadings] = useState<FirebaseReading[]>([]);
 
   const selectedPatient = allPatients.find(p => p.id === selectedPatientId);
-
-  const handleAddRow = () => {
-    if (!newLocation) {
-      alert('Please select a location');
-      return;
-    }
-    
-    // Check if location already exists
-    if (readings.some(r => r.location === newLocation)) {
-      alert('This location has already been added');
-      return;
-    }
-
-    setReadings([...readings, { location: newLocation, ppt: null, pptol: null }]);
-    setNewLocation('');
-  };
-
-  const handleUpdateReading = (index: number, field: 'ppt' | 'pptol', value: string) => {
-    const newReadings = [...readings];
-    newReadings[index][field] = value ? parseFloat(value) : null;
-    setReadings(newReadings);
-  };
-
-  const handleRemoveRow = (index: number) => {
-    setReadings(readings.filter((_, i) => i !== index));
-  };
 
   const handleDiscard = () => {
     if (confirm('Are you sure you want to discard all readings? This action cannot be undone.')) {
@@ -85,18 +63,26 @@ export function AlgometerReadingInterface({
       return;
     }
 
-    if (readings.length === 0) {
-      alert('Please add at least one reading');
+    if (sessionReadings.length === 0) {
+      alert('No readings received from device yet');
       return;
     }
 
     onSave({
       patientId: selectedPatientId,
+      patientCode: selectedPatient?.patientCode,
       patientName: selectedPatient?.name,
-      readings,
-      doctorNotes,
-      takenBy: doctorName,
-      status: 'saved'
+
+      doctorName: doctorName,
+      doctorNotes: doctorNotes,
+
+      muscles: sessionReadings.map(r => ({
+        muscleName: r.muscle,
+        threshold: r.pointPressureThreshold,
+        tolerance: r.pointPressureTolerance
+      })),
+
+      status: "saved"
     });
   };
 
@@ -106,18 +92,27 @@ export function AlgometerReadingInterface({
       return;
     }
 
-    if (readings.length === 0) {
-      alert('Please add at least one reading');
+    if (sessionReadings.length === 0) {
+      alert('No readings received from device yet');
       return;
     }
 
     onCommit({
       patientId: selectedPatientId,
+      patinetCode: selectedPatient?.patientCode,
       patientName: selectedPatient?.name,
-      readings,
-      doctorNotes,
-      takenBy: doctorName,
-      status: 'committed'
+      
+      doctorName: doctorName,
+      doctorNotes: doctorNotes,
+
+      readings: sessionReadings.map(r => ({
+        muscle: r.muscle,
+        ppt: r.pointPressureThreshold,
+        pptol: r.pointPressureTolerance
+       })),
+
+      status: "committed"
+      // sessionTime: new Date().toISOString()
     });
   };
 
@@ -226,7 +221,7 @@ export function AlgometerReadingInterface({
           
           {/* Readings Table */}
           <div className="flex items-start py-1 justify-center w-full">
-            <ReadingTable/>
+            <ReadingTable onRowsChange={setSessionReadings}/>
           </div>
           
           {/* Reference Guide */}

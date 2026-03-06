@@ -12,6 +12,10 @@ import { LayoutDashboard, LogOut, Activity, Users, Calculator, UserPlus } from '
 import { mockPatients, mockAlgometerReadings, Patient, AlgometerReading } from './components/mockData';
 import { toast, Toaster } from 'sonner';
 
+import { ref, remove } from "firebase/database";
+import { db } from "./firebase";
+import ReadingTable from './components/ReadingTable';
+
 // function App() {
 //   return (
 //     <div>
@@ -92,7 +96,18 @@ export default function App() {
       fetchPatients();
     }, []);
 
-  const [readings, setReadings] = useState<AlgometerReading[]>(mockAlgometerReadings);
+const [readings, setReadings] = useState<any[]>([]);
+
+// Fucntion to fetch reading Data
+const fetchReadings = async (patientId: string) => {
+  try {
+    const res = await fetch(`http://localhost:5000/api/readings/${patientId}`);
+    const data = await res.json();
+    setReadings(data);
+  } catch (error) {
+    console.error("Failed to fetch readings", error);
+  }
+};
 
 //   const fetchPatients = async () => {
 //   try {
@@ -336,74 +351,219 @@ const handleEditPatient = async (updatedPatient: Patient) => {
     toast.error("Failed to delete patient");
   }
 };
-
-  const handleSaveReading = (reading: Omit<AlgometerReading, 'id' | 'timestamp'>) => {
-    if (editingReading) {
-      // Update existing reading
-      setReadings(readings.map(r => 
-        r.id === editingReading.id 
-          ? { ...reading, id: editingReading.id, timestamp: editingReading.timestamp, status: 'saved' }
-          : r
-      ));
-      toast.success('Reading updated and saved');
-    } else {
-      // Create new reading
-      const newId = `R${String(readings.length + 1).padStart(3, '0')}`;
-      const newReading: AlgometerReading = {
-        ...reading,
-        id: newId,
-        timestamp: new Date().toISOString(),
-        status: 'saved'
-      };
-      setReadings([...readings, newReading]);
-      toast.success('Reading saved temporarily');
-    }
+  //Old onSave Logic
+  // const handleSaveReading = async(reading: Omit<AlgometerReading, 'id' | 'timestamp'>) => {
+  //   // if (editingReading) {
+  //   //   // Update existing reading
+  //   //   setReadings(readings.map(r => 
+  //   //     r.id === editingReading.id 
+  //   //       ? { ...reading, id: editingReading.id, timestamp: editingReading.timestamp, status: 'saved' }
+  //   //       : r
+  //   //   ));
+  //   //   toast.success('Reading updated and saved');
+  //   // } else {
+  //   //   // Create new reading
+  //   //   const newId = `R${String(readings.length + 1).padStart(3, '0')}`;
+  //   //   const newReading: AlgometerReading = {
+  //   //     ...reading,
+  //   //     id: newId,
+  //   //     timestamp: new Date().toISOString(),
+  //   //     status: 'saved'
+  //   //   };
+  //   //   setReadings([...readings, newReading]);
+  //   //   toast.success('Reading saved temporarily');
+  //   // }
     
-    setShowReadingInterface(false);
-    setEditingReading(null);
-    setPreSelectedPatientId(null);
-    setCurrentPage('readings');
+  //   // setShowReadingInterface(false);
+  //   // setEditingReading(null);
+  //   // setPreSelectedPatientId(null);
+  //   // setCurrentPage('readings');
+  //   await fetch("http://localhost:5000/api/readings", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({
+  //       patientId,
+  //       doctorName,
+  //       muscles,
+  //       status: "saved"
+  //       })
+  //     });
+  // };
+
+  type FirebaseReading = {
+  muscle: string;
+  pointPressureThreshold: number;
+  pointPressureTolerance: number;
   };
 
-  const handleCommitReading = (reading: Omit<AlgometerReading, 'id' | 'timestamp'>) => {
-    if (editingReading) {
-      // Update and commit existing reading
-      setReadings(readings.map(r => 
-        r.id === editingReading.id 
-          ? { ...reading, id: editingReading.id, timestamp: new Date().toISOString(), status: 'committed' }
-          : r
-      ));
-      toast.success('Reading updated and committed to database');
-    } else {
-      // Create new committed reading
-      const newId = `R${String(readings.length + 1).padStart(3, '0')}`;
-      const newReading: AlgometerReading = {
-        ...reading,
-        id: newId,
-        timestamp: new Date().toISOString(),
-        status: 'committed'
-      };
-      setReadings([...readings, newReading]);
-      toast.success('Reading committed to database');
-    }
-    
-    // Update patient's hasReadings flag
-    if (reading.patientId) {
-      setPatients(patients.map(p => 
-        p.id === reading.patientId ? { ...p, hasReadings: true } : p
-      ));
-    }
-    
-    setShowReadingInterface(false);
-    setEditingReading(null);
-    setPreSelectedPatientId(null);
-  };
+  // To store Readings in App.tsx
+  const [sessionReading, setSessionReading] = useState<FirebaseReading[]>([]);
+  // Render data from Reading Page
+  <ReadingTable onRowsChange={setSessionReading}/>
 
-  const handleOpenReadingInterface = (patientId?: string) => {
-    setPreSelectedPatientId(patientId || null);
-    setEditingReading(null);
-    setShowReadingInterface(true);
-  };
+  type ReadingInfo = {
+  patientId: string;
+  patientName?: string;
+  readings: {
+    location: string;
+    ppt: number | null;
+    pptol: number | null;
+  }[];
+  doctorNotes?: string;
+  takenBy: string;
+  status: "saved" | "committed";
+};
+
+  // New Save Logic
+  const handleSaveReading = async(readingInfo : ReadingInfo)=> {
+  try {
+    await fetch("http://localhost:5000/api/readings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        patientId: readingInfo.patientId,
+        doctorName: doctorName,
+        muscles: sessionReading.map(r => ({
+          muscleName: r.muscle,
+          threshold: r.pointPressureThreshold,
+          tolerance: r.pointPressureTolerance
+        })),
+        status: "saved"
+      })
+    });
+
+    toast.success("Reading saved successfully");
+
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to save reading");
+  }
+};
+
+  // Old onCommit Logic
+  // const handleCommitReading = async(reading: Omit<AlgometerReading, 'id' | 'timestamp'>) => {
+  //   // if (editingReading) {
+  //   //   // Update and commit existing reading
+  //   //   setReadings(readings.map(r => 
+  //   //     r.id === editingReading.id 
+  //   //       ? { ...reading, id: editingReading.id, timestamp: new Date().toISOString(), status: 'committed' }
+  //   //       : r
+  //   //   ));
+  //   //   toast.success('Reading updated and committed to database');
+  //   // } else {
+  //   //   // Create new committed reading
+  //   //   const newId = `R${String(readings.length + 1).padStart(3, '0')}`;
+  //   //   const newReading: AlgometerReading = {
+  //   //     ...reading,
+  //   //     id: newId,
+  //   //     timestamp: new Date().toISOString(),
+  //   //     status: 'committed'
+  //   //   };
+  //   //   setReadings([...readings, newReading]);
+  //   //   toast.success('Reading committed to database');
+  //   // }
+    
+  //   // // Update patient's hasReadings flag
+  //   // if (reading.patientId) {
+  //   //   setPatients(patients.map(p => 
+  //   //     p.id === reading.patientId ? { ...p, hasReadings: true } : p
+  //   //   ));
+  //   // }
+    
+  //   // setShowReadingInterface(false);
+  //   // setEditingReading(null);
+  //   // setPreSelectedPatientId(null);
+  //   await fetch("http://localhost:5000/api/readings", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({
+  //       patientId,
+  //       doctorName,
+  //       muscles,
+  //       status: "committed"
+  //     })
+  //   });
+  // };
+
+  // Old onCommit Logic
+//   const handleCommitReading = async (
+//   reading: Omit<AlgometerReading, 'id' | 'timestamp'>
+// ) => {
+//   try {
+//     const response = await fetch("http://localhost:5000/api/readings", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({
+//         patientId: reading.patientId,
+//         doctorName: reading.takenBy,
+//         muscles: reading.readings.map(r => ({
+//           muscleName: r.location,
+//           threshold: r.ppt,
+//           tolerance: r.pptol
+//         })),
+//         status: "committed"
+//       })
+//     });
+
+//     if (!response.ok) {
+//       throw new Error("Failed to commit reading");
+//     }
+
+//     toast.success("Reading committed successfully");
+
+//     // Optional but recommended:
+//     // Close modal after successful commit
+//     setShowReadingInterface(false);
+//     setEditingReading(null);
+//     setPreSelectedPatientId(null);
+
+//     // If you have a fetchReadings function, call it here:
+//     // await fetchReadings(reading.patientId);
+
+//   } catch (error) {
+//     console.error(error);
+//     toast.error("Failed to commit reading");
+//   }
+// };
+
+  // New Commit Logic
+  const handleCommitReading = async(readingInfo : ReadingInfo)=> {
+  try {
+    await fetch("http://localhost:5000/api/readings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        patientId: readingInfo.patientId,
+        doctorName: doctorName,
+        muscles: sessionReading.map(r => ({
+          muscleName: r.muscle,
+          threshold: r.pointPressureThreshold,
+          tolerance: r.pointPressureTolerance
+        })),
+        status: "commited"
+      })
+    });
+
+    toast.success("Reading commited successfully");
+
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to commit reading");
+  }
+};
+
+
+  const handleOpenReadingInterface = async (patientId?: string) => {
+    try {
+      await remove(ref(db, "liveReadings/algometer")); // clear old device data
+    } catch (err) {
+      console.error("Failed to clear Firebase readings", err);
+  }
+
+  setPreSelectedPatientId(patientId || null);
+  setEditingReading(null);
+  setShowReadingInterface(true);
+};
 
   const handleEditReading = (reading: AlgometerReading) => {
     setEditingReading(reading);

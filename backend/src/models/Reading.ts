@@ -26,9 +26,20 @@ const readingSchema = new mongoose.Schema(
       ref: "Patient",
       required: true
     },
+    patientCode: {
+      type: String,
+      required: true
+    },
+    patientName: {
+      type: String,
+      required: true
+    },
     doctorName: {
       type: String,
       required: true
+    },
+    doctorNotes: {
+      type : String
     },
     muscles: {
       type: [muscleSchema],
