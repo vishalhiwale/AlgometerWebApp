@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Plus, Save, Check, XCircle, User, Divide } from 'lucide-react';
 // import { Patient, AlgometerReading, LocationReading } from './mockData';
 import ReadingTable from './ReadingTable';
-import { Patient, AlgometerReading, LocationReading } from '../types/algometer';
+import { Patient, AlgometerReading } from '../types/algometer';
 interface AlgometerReadingInterfaceProps {
   onClose: () => void;
   onSave: (reading: Omit<AlgometerReading, 'id' | 'timestamp'>) => void;
@@ -69,14 +69,14 @@ export function AlgometerReadingInterface({
     }
 
     onSave({
-      patientId: selectedPatientId,
-      patientCode: selectedPatient?.patientCode,
-      patientName: selectedPatient?.name,
+      patientId: selectedPatient!.id,
+      patientCode: selectedPatient!.patientCode,
+      patientName: selectedPatient!.name,
 
       doctorName: doctorName,
       doctorNotes: doctorNotes,
 
-      muscles: sessionReadings.map(r => ({
+      readings: sessionReadings.map(r => ({
         muscleName: r.muscle,
         threshold: r.pointPressureThreshold,
         tolerance: r.pointPressureTolerance
@@ -86,9 +86,19 @@ export function AlgometerReadingInterface({
     });
   };
 
+  
   const handleCommitToDB = () => {
+    console.log("selectedPatientId:", selectedPatientId);
+    console.log("allPatients:", allPatients);
+    console.log("selectedPatient:", selectedPatient);
+
     if (!selectedPatientId) {
       alert('Please select a patient');
+      return;
+    }
+
+    if(!selectedPatient) {
+      alert("Patient not found");
       return;
     }
 
@@ -97,18 +107,18 @@ export function AlgometerReadingInterface({
       return;
     }
 
-    onCommit({
-      patientId: selectedPatientId,
-      patinetCode: selectedPatient?.patientCode,
-      patientName: selectedPatient?.name,
+    onCommit({  
+      patientId: selectedPatient.id,
+      patientCode: selectedPatient.patientCode,
+      patientName: selectedPatient.name,
       
       doctorName: doctorName,
       doctorNotes: doctorNotes,
 
       readings: sessionReadings.map(r => ({
-        muscle: r.muscle,
-        ppt: r.pointPressureThreshold,
-        pptol: r.pointPressureTolerance
+        muscleName: r.muscle,
+        threshold: r.pointPressureThreshold,
+        tolerance: r.pointPressureTolerance
        })),
 
       status: "committed"
@@ -146,12 +156,27 @@ export function AlgometerReadingInterface({
               disabled={!!existingReading?.patientId}
             >
               <option value="">-- Select a Patient --</option>
+              
               {(existingReading?.patientId ? allPatients : availablePatients).map(patient => (
                 <option key={patient.id} value={patient.id}>
-                  {patient.name} ({patient.id})
+                  {patient.name} ({patient.patientCode})
                 </option>
               ))}
             </select>
+
+            {/* New Select option */}
+                      {/* <select
+            value={selectedPatientId}
+            onChange={(e) => setSelectedPatientId(e.target.value)}
+          >
+            <option value="">-- Select a Patient --</option>
+
+            {(existingReading?.patientId ? allPatients : availablePatients).map(patient => (
+              <option key={patient.id} value={patient.id}>
+                {patient.name} ({patient.patientCode})
+              </option>
+            ))}
+          </select> */}
           </div>
 
           {/* Patient Details */}
@@ -181,7 +206,7 @@ export function AlgometerReadingInterface({
                   </div>
                   <div>
                     <p className="text-gray-600 text-sm">Patient ID</p>
-                    <p className="text-gray-900">{selectedPatient.id}</p>
+                    <p className="text-gray-900">{selectedPatient.patientCode}</p> {/*old : patientId*/}
                   </div>
                   <div>
                     <p className="text-gray-600 text-sm">Age / Gender</p>

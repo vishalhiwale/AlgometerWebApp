@@ -143,6 +143,11 @@ interface Props {
 function ReadingTable({onRowsChange} : Props) {
   const [rows, setRows] = useState<FirebaseReading[]>([]);
 
+  // send rows to parent AFTER state updates
+  useEffect(() => {
+    onRowsChange(rows);
+  }, [rows])
+
   // Track processed Firebase keys
   const seenKeys = useRef<Set<string>>(new Set())
 
@@ -158,11 +163,7 @@ function ReadingTable({onRowsChange} : Props) {
 
       const newReading = snapshot.val() as FirebaseReading;
 
-      setRows((prev) => {
-        const updated = [...prev, newReading];
-        onRowsChange(updated);
-        return updated;
-      });
+      setRows(prev => [...prev, newReading]);
 
     });
 

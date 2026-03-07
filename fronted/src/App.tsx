@@ -16,16 +16,6 @@ import { ref, remove } from "firebase/database";
 import { db } from "./firebase";
 import ReadingTable from './components/ReadingTable';
 
-// function App() {
-//   return (
-//     <div>
-//       <PatientDatabase />
-//     </div>
-//   );
-// }
-
-// export default App;
-
 type Page = 'dashboard' | 'patients' | 'converter' | 'patient-detail' | 'readings';
 
 export default function App() {
@@ -73,26 +63,6 @@ export default function App() {
 };
 
   useEffect(() => {
-//   fetch("http://localhost:5000/api/patients")
-//     .then(res => res.json())
-//     .then(data => {
-//       const formatted = data.map((p: any) => ({
-//   id: p._id,                 // internal MongoDB id (used for edit/delete)
-//   patientCode: p.patientCode, // <-- ADD THIS
-//   name: p.name,
-//   age: p.age,
-//   gender: p.gender,
-//   contact: p.contact,
-//   diagnosis: p.diagnosis,
-//   lastVisit: p.lastVisitDate,
-//   nextCheckup: p.nextCheckupDate,
-//   status: p.status || "active",
-//   totalVisits: 0,
-//   hasReadings: false
-// }));
-//       setPatients(formatted);
-//     })
-//     .catch(err => console.error("Failed to fetch patients", err));
       fetchPatients();
     }, []);
 
@@ -108,50 +78,6 @@ const fetchReadings = async (patientId: string) => {
     console.error("Failed to fetch readings", error);
   }
 };
-
-//   const fetchPatients = async () => {
-//   try {
-//     const res = await fetch("http://localhost/api/getPatients.php");
-//     const data = await res.json();
-
-//     const mapped = data.map((p: any) => ({
-//       id: p.patientId ?? p.patient_id,
-//       name: p.patientName ?? p.patient_name,
-//       diagnosis: p.diagnosis,
-//       status: "active",
-//       nextCheckup: null,
-//       totalVisits: p.total_visits ?? 0,
-//       hasReadings: false
-//     }));
-
-//     setPatients(mapped);
-//   } catch (err) {
-//     console.error("Failed to fetch patients", err);
-//   }
-// };
-
-// useEffect(() => {
-//   fetchPatients();
-// }, []);
-
-//   useEffect(() => {
-//   fetch("http://localhost/api/getPatients.php")
-//     .then(res => res.json())
-//     .then(data => {
-//       const mapped = data.map((p: any) => ({
-//         id: p.patient_id,
-//         name: p.patient_name,
-//         diagnosis: p.diagnosis,
-//         status: "active",
-//         nextCheckup: null,
-//         totalVisits: p.total_visits ?? 0,
-//         hasReadings: false
-//       }));
-//       setPatients(mapped);
-//     })
-//     .catch(err => console.error(err));
-// }, []);
-
   
   // Modal states
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
@@ -199,7 +125,7 @@ const fetchReadings = async (patientId: string) => {
     const saved = await res.json();
 
     const formatted = {
-      id: saved._id,
+      id: saved.patientId,
       patientCode: saved.patientCode,
       name: saved.name,
       age: saved.age,
@@ -222,50 +148,6 @@ const fetchReadings = async (patientId: string) => {
     toast.error("Failed to save patient");
   }
 };
-
-
-//   const handleAddPatient = async (
-//   newPatient: Omit<Patient, 'id' | 'totalVisits' | 'hasReadings'>
-// ) => {
-//   try {
-//     const payload = {
-//       patientName: newPatient.name,
-//       age: newPatient.age,
-//       gender: newPatient.gender,
-//       contact: newPatient.contact,
-//       diagnosis: newPatient.diagnosis
-//     };
-
-//     const res = await fetch("http://localhost/api/addPatients.php", {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify(payload)
-//     });
-
-//     const result = await res.json();
-
-//     if (result.status === "success") {
-//       toast.success("Patient saved to database");
-//       fetchPatients(); // reload from MySQL
-//       setShowAddPatientModal(false);
-//     } else {
-//       toast.error("Failed to save patient");
-//     }
-//   } catch (err) {
-//     console.error(err);
-//     toast.error("Server error while saving patient");
-//   }
-// };
-
-
-  // const handleEditPatient = (updatedPatient: Patient) => {
-  //   setPatients(patients.map(p => 
-  //     p.id === updatedPatient.id ? updatedPatient : p
-  //   ));
-  //   setShowEditPatientModal(false);
-  //   setEditingPatientId(null);
-  //   toast.success('Patient updated successfully');
-  // };
 
 const handleEditPatient = async (updatedPatient: Patient) => {
   try {
@@ -292,8 +174,8 @@ const handleEditPatient = async (updatedPatient: Patient) => {
     const data = await res.json();
 
     setPatients(prev =>
-      prev.map(p => p.id === data._id ? {
-        id: data._id,
+      prev.map(p => p.id === data.patientId ? {
+        id: data.patientId,
         name: data.name,
         age: data.age,
         gender: data.gender,
@@ -317,23 +199,6 @@ const handleEditPatient = async (updatedPatient: Patient) => {
   }
 };
 
-  // const handleDeletePatient = (patientId: string) => {
-  //   if (confirm('Are you sure you want to delete this patient? This action cannot be undone.')) {
-  //     // Delete patient
-  //     setPatients(patients.filter(p => p.id !== patientId));
-      
-  //     // Delete associated readings
-  //     setReadings(readings.filter(r => r.patientId !== patientId));
-      
-  //     // Navigate back if we're viewing the deleted patient
-  //     if (selectedPatientId === patientId) {
-  //       setCurrentPage('patients');
-  //       setSelectedPatientId(null);
-  //     }
-      
-  //     toast.success('Patient deleted successfully');
-  //   }
-  // };
   const handleDeletePatient = async (patientId: string) => {
   if (!confirm('Are you sure you want to delete this patient? This action cannot be undone.')) return;
 
@@ -351,44 +216,6 @@ const handleEditPatient = async (updatedPatient: Patient) => {
     toast.error("Failed to delete patient");
   }
 };
-  //Old onSave Logic
-  // const handleSaveReading = async(reading: Omit<AlgometerReading, 'id' | 'timestamp'>) => {
-  //   // if (editingReading) {
-  //   //   // Update existing reading
-  //   //   setReadings(readings.map(r => 
-  //   //     r.id === editingReading.id 
-  //   //       ? { ...reading, id: editingReading.id, timestamp: editingReading.timestamp, status: 'saved' }
-  //   //       : r
-  //   //   ));
-  //   //   toast.success('Reading updated and saved');
-  //   // } else {
-  //   //   // Create new reading
-  //   //   const newId = `R${String(readings.length + 1).padStart(3, '0')}`;
-  //   //   const newReading: AlgometerReading = {
-  //   //     ...reading,
-  //   //     id: newId,
-  //   //     timestamp: new Date().toISOString(),
-  //   //     status: 'saved'
-  //   //   };
-  //   //   setReadings([...readings, newReading]);
-  //   //   toast.success('Reading saved temporarily');
-  //   // }
-    
-  //   // setShowReadingInterface(false);
-  //   // setEditingReading(null);
-  //   // setPreSelectedPatientId(null);
-  //   // setCurrentPage('readings');
-  //   await fetch("http://localhost:5000/api/readings", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({
-  //       patientId,
-  //       doctorName,
-  //       muscles,
-  //       status: "saved"
-  //       })
-  //     });
-  // };
 
   type FirebaseReading = {
   muscle: string;
@@ -397,9 +224,9 @@ const handleEditPatient = async (updatedPatient: Patient) => {
   };
 
   // To store Readings in App.tsx
-  const [sessionReading, setSessionReading] = useState<FirebaseReading[]>([]);
+  // const [sessionReading, setSessionReading] = useState<FirebaseReading[]>([]);
   // Render data from Reading Page
-  <ReadingTable onRowsChange={setSessionReading}/>
+  // <ReadingTable onRowsChange={setSessionReading}/>
 
   type ReadingInfo = {
   patientId: string;
@@ -420,16 +247,7 @@ const handleEditPatient = async (updatedPatient: Patient) => {
     await fetch("http://localhost:5000/api/readings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        patientId: readingInfo.patientId,
-        doctorName: doctorName,
-        muscles: sessionReading.map(r => ({
-          muscleName: r.muscle,
-          threshold: r.pointPressureThreshold,
-          tolerance: r.pointPressureTolerance
-        })),
-        status: "saved"
-      })
+      body: JSON.stringify(readingInfo)
     });
 
     toast.success("Reading saved successfully");
@@ -440,108 +258,13 @@ const handleEditPatient = async (updatedPatient: Patient) => {
   }
 };
 
-  // Old onCommit Logic
-  // const handleCommitReading = async(reading: Omit<AlgometerReading, 'id' | 'timestamp'>) => {
-  //   // if (editingReading) {
-  //   //   // Update and commit existing reading
-  //   //   setReadings(readings.map(r => 
-  //   //     r.id === editingReading.id 
-  //   //       ? { ...reading, id: editingReading.id, timestamp: new Date().toISOString(), status: 'committed' }
-  //   //       : r
-  //   //   ));
-  //   //   toast.success('Reading updated and committed to database');
-  //   // } else {
-  //   //   // Create new committed reading
-  //   //   const newId = `R${String(readings.length + 1).padStart(3, '0')}`;
-  //   //   const newReading: AlgometerReading = {
-  //   //     ...reading,
-  //   //     id: newId,
-  //   //     timestamp: new Date().toISOString(),
-  //   //     status: 'committed'
-  //   //   };
-  //   //   setReadings([...readings, newReading]);
-  //   //   toast.success('Reading committed to database');
-  //   // }
-    
-  //   // // Update patient's hasReadings flag
-  //   // if (reading.patientId) {
-  //   //   setPatients(patients.map(p => 
-  //   //     p.id === reading.patientId ? { ...p, hasReadings: true } : p
-  //   //   ));
-  //   // }
-    
-  //   // setShowReadingInterface(false);
-  //   // setEditingReading(null);
-  //   // setPreSelectedPatientId(null);
-  //   await fetch("http://localhost:5000/api/readings", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({
-  //       patientId,
-  //       doctorName,
-  //       muscles,
-  //       status: "committed"
-  //     })
-  //   });
-  // };
-
-  // Old onCommit Logic
-//   const handleCommitReading = async (
-//   reading: Omit<AlgometerReading, 'id' | 'timestamp'>
-// ) => {
-//   try {
-//     const response = await fetch("http://localhost:5000/api/readings", {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({
-//         patientId: reading.patientId,
-//         doctorName: reading.takenBy,
-//         muscles: reading.readings.map(r => ({
-//           muscleName: r.location,
-//           threshold: r.ppt,
-//           tolerance: r.pptol
-//         })),
-//         status: "committed"
-//       })
-//     });
-
-//     if (!response.ok) {
-//       throw new Error("Failed to commit reading");
-//     }
-
-//     toast.success("Reading committed successfully");
-
-//     // Optional but recommended:
-//     // Close modal after successful commit
-//     setShowReadingInterface(false);
-//     setEditingReading(null);
-//     setPreSelectedPatientId(null);
-
-//     // If you have a fetchReadings function, call it here:
-//     // await fetchReadings(reading.patientId);
-
-//   } catch (error) {
-//     console.error(error);
-//     toast.error("Failed to commit reading");
-//   }
-// };
-
   // New Commit Logic
   const handleCommitReading = async(readingInfo : ReadingInfo)=> {
   try {
     await fetch("http://localhost:5000/api/readings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        patientId: readingInfo.patientId,
-        doctorName: doctorName,
-        muscles: sessionReading.map(r => ({
-          muscleName: r.muscle,
-          threshold: r.pointPressureThreshold,
-          tolerance: r.pointPressureTolerance
-        })),
-        status: "commited"
-      })
+      body: JSON.stringify(readingInfo),
     });
 
     toast.success("Reading commited successfully");
