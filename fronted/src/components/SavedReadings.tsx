@@ -3,25 +3,29 @@ import { useEffect, useState } from "react"
 import { AlgometerReading } from '../types/algometer';
 
 interface SavedReadingsProps {
-  readings: AlgometerReading[];
   onOpenReadingInterface: () => void;
   onEditReading: (reading: AlgometerReading) => void;
 }
-
-// export function SavedReadings({ onOpenReadingInterface, onEditReading }) {
   
   export function SavedReadings({ 
     onOpenReadingInterface,
     onEditReading
   }: SavedReadingsProps) {
 
-  const [savedReadings, setsavedReadings] = useState<AlgometerReading[]>([]);
+  const [savedReadings, setSavedReadings] = useState<AlgometerReading[]>([]);
 
   useEffect(() => {
     fetch("http://localhost:5000/api/readings/saved")
       .then(res => res.json())
       .then(data => {
-        setsavedReadings(data)
+        const formatted = data.map((r: any) => ({
+          ...r,
+          id: r._id
+        }))
+
+        console.log("Saved readings:", formatted)
+
+        setSavedReadings(formatted)
       })
       .catch(err => console.error(err))
   }, [])
@@ -89,7 +93,7 @@ interface SavedReadingsProps {
               {reading.patientName && (
                 <div className="mb-4 bg-blue-50 border border-blue-200 p-3 rounded-lg">
                   <p className="text-gray-700 text-sm mb-1">Patient</p>
-                  <p className="text-blue-900">{reading.patientName}</p>
+                  <p className="text-blue-900">{reading.patientName} ({reading.patientCode})</p>
                   <p className="text-blue-700 text-xs mt-1">{reading.patientId}</p>
                 </div>
               )}

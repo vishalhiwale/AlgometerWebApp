@@ -258,14 +258,25 @@ const handleEditPatient = async (updatedPatient: Patient) => {
 };
 
   // New Commit Logic
-  const handleCommitReading = async(readingInfo : ReadingInfo)=> {
+  const handleCommitReading = async(readingInfo : ReadingInfo, id?: string)=> {
   try {
-    await fetch("http://localhost:5000/api/readings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(readingInfo),
-    });
-
+    
+    if(id) {
+       // UPDATE existing reading
+      await fetch(`http://localhost:5000/api/readings/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(readingInfo)
+      });
+    }else{
+      //CREATE new reading
+      await fetch("http://localhost:5000/api/readings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(readingInfo),
+      });
+    }
+    
     toast.success("Reading commited successfully");
 
   } catch (error) {
@@ -423,7 +434,7 @@ const handleEditPatient = async (updatedPatient: Patient) => {
           )}
           {currentPage === 'converter' && <UnitConverter />}
           {currentPage === 'readings' && (
-            <UnassignedReadings
+            <SavedReadings
               readings={readings}
               onOpenReadingInterface={() => handleOpenReadingInterface()}
               onEditReading={handleEditReading}

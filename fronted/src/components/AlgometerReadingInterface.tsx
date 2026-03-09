@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Plus, Save, Check, XCircle, User, Divide } from 'lucide-react';
 import ReadingTable from './ReadingTable';
 import { Patient, AlgometerReading } from '../types/algometer';
 interface AlgometerReadingInterfaceProps {
   onClose: () => void;
   onSave: (reading: Omit<AlgometerReading, 'id' | 'timestamp'>) => void;
-  onCommit: (reading: Omit<AlgometerReading, 'id' | 'timestamp'>) => void;
+  onCommit: (reading: Omit<AlgometerReading, 'id' | 'timestamp'>,
+    id?:string
+  ) => void;
   doctorName: string;
   existingReading?: AlgometerReading | null;
   availablePatients: Patient[];
@@ -47,6 +49,30 @@ export function AlgometerReadingInterface({
   };
 
   const [sessionReadings, setSessionReadings] = useState<FirebaseReading[]>([]);
+  // useEffect(() => {
+  //   if (existingReading){
+  //     setSessionReadings(
+  //       existingReading.readings.map((r) => ({
+  //         muscle: r.muscleName,
+  //         pointPressureThreshold: r.threshold,
+  //         pointPressureTolerance: r.tolerance
+  //       }))
+  //     )
+  //   }
+  // }, [existingReading]);
+  useEffect(() => {
+
+  if (!existingReading) return;
+
+  const convertedReadings = existingReading.readings.map((r) => ({
+    muscle: r.muscleName,
+    pointPressureThreshold: r.threshold,
+    pointPressureTolerance: r.tolerance
+  }));
+
+  setSessionReadings(convertedReadings);
+
+}, [existingReading]);
 
   const selectedPatient = allPatients.find(p => p.id === selectedPatientId);
 
@@ -87,9 +113,6 @@ export function AlgometerReadingInterface({
 
   
   const handleCommitToDB = () => {
-    // console.log("selectedPatientId:", selectedPatientId);
-    // console.log("allPatients:", allPatients);
-    // console.log("selectedPatient:", selectedPatient);
 
     if (!selectedPatientId) {
       alert('Please select a patient');
@@ -106,23 +129,47 @@ export function AlgometerReadingInterface({
       return;
     }
 
-    onCommit({  
-      patientId: selectedPatient.id,
-      patientCode: selectedPatient.patientCode,
-      patientName: selectedPatient.name,
+    // onCommit({  
+    //   patientId: selectedPatient.id,
+    //   patientCode: selectedPatient.patientCode,
+    //   patientName: selectedPatient.name,
       
-      doctorName: doctorName,
-      doctorNotes: doctorNotes,
+    //   doctorName: doctorName,
+    //   doctorNotes: doctorNotes,
 
-      readings: sessionReadings.map(r => ({
-        muscleName: r.muscle,
-        threshold: r.pointPressureThreshold,
-        tolerance: r.pointPressureTolerance
-       })),
+    //   readings: sessionReadings.map(r => ({
+    //     muscleName: r.muscle,
+    //     threshold: r.pointPressureThreshold,
+    //     tolerance: r.pointPressureTolerance
+    //    })),
 
-      status: "committed"
-      // sessionTime: new Date().toISOString()
-    });
+    //   status: "committed"
+    //   // sessionTime: new Date().toISOString()
+    // });
+
+  const payload: Omit<AlgometerReading, "id" | "timestamp"> = {
+    patientId: selectedPatient!.id,
+    patientCode: selectedPatient!.patientCode,
+    patientName: selectedPatient!.name,
+
+    doctorName: doctorName,
+    doctorNotes: doctorNotes,
+
+    readings: sessionReadings.map(r => ({
+      muscleName: r.muscle,
+      threshold: r.pointPressureThreshold,
+      tolerance: r.pointPressureTolerance
+    })),
+
+    status: "committed"
+  };
+
+  if (existingReading) {
+    onCommit(payload, existingReading?.id );
+  } else {
+    onCommit(payload);
+  }
+
   };
 
   return (
@@ -245,7 +292,8 @@ export function AlgometerReadingInterface({
           
           {/* Readings Table */}
           <div className="flex items-start py-1 justify-center w-full">
-            <ReadingTable onRowsChange={setSessionReadings}/>
+            <ReadingTable rows={sessionReadings} 
+              onRowsChange={setSessionReadings}/>
           </div>
           
           {/* Reference Guide */}

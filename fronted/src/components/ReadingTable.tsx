@@ -137,11 +137,17 @@ interface FirebaseReading {
 }
 
 interface Props {
+  rows: FirebaseReading[]
   onRowsChange: (rows: FirebaseReading[]) => void;
 }
 
-function ReadingTable({onRowsChange} : Props) {
-  const [rows, setRows] = useState<FirebaseReading[]>([]);
+function ReadingTable({rows: initialRows, onRowsChange} : Props) {
+
+  const [rows, setRows] = useState<FirebaseReading[]>(initialRows || []);
+
+  useEffect(() => {
+    setRows(initialRows || []);
+  }, [initialRows]);
 
   // send rows to parent AFTER state updates
   useEffect(() => {
@@ -189,7 +195,7 @@ function ReadingTable({onRowsChange} : Props) {
       </thead>
       <tbody>
         {rows.map((r, index) => (
-          <tr key={index}>
+          <tr key={r.muscle + index}>
             <td className="border">{r.muscle}</td>
             <td className="border">{r.pointPressureThreshold} kPa</td>
             <td className="border">{r.pointPressureTolerance} kPa</td>
