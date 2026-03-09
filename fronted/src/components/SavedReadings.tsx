@@ -1,21 +1,37 @@
 import { Activity, Calendar, User, FileText } from 'lucide-react';
-import { AlgometerReading } from './mockData';
+import { useEffect, useState } from "react"
+import { AlgometerReading } from '../types/algometer';
 
-interface UnassignedReadingsProps {
+interface SavedReadingsProps {
   readings: AlgometerReading[];
   onOpenReadingInterface: () => void;
   onEditReading: (reading: AlgometerReading) => void;
 }
 
-export function UnassignedReadings({ 
-  readings, 
-  onOpenReadingInterface,
-  onEditReading
-}: UnassignedReadingsProps) {
-  const savedReadings = readings.filter(r => r.status === 'saved');
+// export function SavedReadings({ onOpenReadingInterface, onEditReading }) {
+  
+  export function SavedReadings({ 
+    onOpenReadingInterface,
+    onEditReading
+  }: SavedReadingsProps) {
 
-  const formatDate = (timestamp: string) => {
+  const [savedReadings, setsavedReadings] = useState<AlgometerReading[]>([]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/readings/saved")
+      .then(res => res.json())
+      .then(data => {
+        setsavedReadings(data)
+      })
+      .catch(err => console.error(err))
+  }, [])
+
+
+  const formatDate = (timestamp?: string) => {
+    if (!timestamp) return "Unknown"
+
     const date = new Date(timestamp);
+    
     return date.toLocaleString('en-IN', {
       day: '2-digit',
       month: 'short',
@@ -49,7 +65,7 @@ export function UnassignedReadings({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {savedReadings.map((reading) => (
+          {savedReadings.map((reading: AlgometerReading) => (
             <div
               key={reading.id}
               onClick={() => onEditReading(reading)}
@@ -84,10 +100,10 @@ export function UnassignedReadings({
                 <div className="space-y-1 max-h-32 overflow-y-auto">
                   {reading.readings.map((r, idx) => (
                     <div key={idx} className="text-xs text-gray-700 bg-white px-2 py-1 rounded border border-blue-100">
-                      <span className="font-medium">{r.location}:</span> 
+                      <span className="font-medium">{r.muscleName}:</span> 
                       <span className="ml-1">
-                        PPT: {r.ppt !== null ? `${r.ppt} kPa` : 'N/A'}, 
-                        PPTol: {r.pptol !== null ? `${r.pptol} kPa` : 'N/A'}
+                        PPT: {r.threshold !== null ? `${r.threshold} kPa` : 'N/A'}, 
+                        PPTol: {r.tolerance !== null ? `${r.tolerance} kPa` : 'N/A'}
                       </span>
                     </div>
                   ))}
@@ -98,7 +114,7 @@ export function UnassignedReadings({
               {/* Doctor Info */}
               <div className="mb-4 flex items-center gap-2 text-gray-600 text-sm">
                 <User className="w-4 h-4" />
-                <span>Taken by: {reading.takenBy}</span>
+                <span>Taken by: {reading.doctorName}</span>
               </div>
 
               {/* Doctor Notes Preview */}

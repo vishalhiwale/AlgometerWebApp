@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { X, Save } from 'lucide-react';
-import { Patient } from './mockData';
 
 interface EditPatientModalProps {
   patient: Patient;

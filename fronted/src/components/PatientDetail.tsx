@@ -1,6 +1,5 @@
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { ArrowLeft, Calendar, FileText, TrendingUp, MapPin, Activity } from 'lucide-react';
-import { Patient, AlgometerReading } from './mockData';
 import { BodyDiagram } from './BodyDiagram';
 
 interface PatientDetailProps {

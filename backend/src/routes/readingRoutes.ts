@@ -15,6 +15,17 @@ router.post("/", async (req, res) => {
   }
 });
 
+
+// to get only saved readings
+router.get("/saved", async (req, res) => {
+  try {
+    const readings = await Reading.find({ status: "saved" });
+    res.json(readings);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching saved readings" });
+  }
+});
+
 // Get readings for a patient
 router.get("/:patientId", async (req, res) => {
   try {
@@ -29,28 +40,27 @@ router.get("/:patientId", async (req, res) => {
   }
 });
 
-export default router;
 
 router.put("/:id", async (req, res) => {
   try {
     const existing = await Reading.findById(req.params.id);
-
+    
     if (!existing) {
       return res.status(404).json({ error: "Reading not found" });
     }
-
+    
     if (existing.status === "committed") {
       return res.status(403).json({ error: "Committed readings cannot be modified" });
     }
-
+    
     const updated = await Reading.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
     );
-
+    
     res.json(updated);
-
+    
   } catch (error) {
     console.error(error);
     res.status(400).json({ error: "Failed to update reading" });
@@ -60,21 +70,22 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const existing = await Reading.findById(req.params.id);
-
+    
     if (!existing) {
       return res.status(404).json({ error: "Reading not found" });
     }
-
+    
     if (existing.status === "committed") {
       return res.status(403).json({ error: "Committed readings cannot be deleted" });
     }
-
+    
     await Reading.findByIdAndDelete(req.params.id);
-
+    
     res.json({ message: "Reading deleted successfully" });
-
+    
   } catch (error) {
     console.error(error);
     res.status(400).json({ error: "Failed to delete reading" });
   }
 });
+export default router;

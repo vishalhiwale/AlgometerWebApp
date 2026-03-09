@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { X, Plus, Save, Check, XCircle, User, Divide } from 'lucide-react';
-// import { Patient, AlgometerReading, LocationReading } from './mockData';
 import ReadingTable from './ReadingTable';
 import { Patient, AlgometerReading } from '../types/algometer';
 interface AlgometerReadingInterfaceProps {
@@ -88,9 +87,9 @@ export function AlgometerReadingInterface({
 
   
   const handleCommitToDB = () => {
-    console.log("selectedPatientId:", selectedPatientId);
-    console.log("allPatients:", allPatients);
-    console.log("selectedPatient:", selectedPatient);
+    // console.log("selectedPatientId:", selectedPatientId);
+    // console.log("allPatients:", allPatients);
+    // console.log("selectedPatient:", selectedPatient);
 
     if (!selectedPatientId) {
       alert('Please select a patient');

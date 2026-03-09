@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { X, UserPlus } from 'lucide-react';
-import { Patient } from './mockData';
 
 interface AddPatientModalProps {
   onClose: () => void;

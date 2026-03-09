@@ -4,12 +4,11 @@ import { Dashboard } from './components/Dashboard';
 import { PatientDatabase } from './components/PatientDatabase';
 import { PatientDetail } from './components/PatientDetail';
 import { UnitConverter } from './components/UnitConverter';
-import { UnassignedReadings } from './components/UnassignedReadings';
+import { SavedReadings } from './components/SavedReadings';
 import { AlgometerReadingInterface } from './components/AlgometerReadingInterface';
 import { AddPatientModal } from './components/AddPatientModal';
 import { EditPatientModal } from './components/EditPatientModal';
 import { LayoutDashboard, LogOut, Activity, Users, Calculator, UserPlus } from 'lucide-react';
-import { mockPatients, mockAlgometerReadings, Patient, AlgometerReading } from './components/mockData';
 import { toast, Toaster } from 'sonner';
 
 import { ref, remove } from "firebase/database";

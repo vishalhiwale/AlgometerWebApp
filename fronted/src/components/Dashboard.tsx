@@ -1,16 +1,28 @@
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Users, Calendar, TrendingUp, Activity } from 'lucide-react';
-import { mockPatients } from './mockData';
+import { useEffect, useState } from 'react';
 
 export function Dashboard() {
+
+  const [patients, setPatients] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/patients")
+      .then(res => res.json())
+      .then(data => {
+        setPatients(data);
+      })
+      .catch(err => console.error(err));
+  }, []);
+
   // Calculate statistics
-  const totalPatients = mockPatients.length;
-  const todayAppointments = mockPatients.filter(p => {
+  const totalPatients = patients.length;
+  const todayAppointments = patients.filter(p => {
     const today = new Date();
     return p.nextCheckup && new Date(p.nextCheckup).toDateString() === today.toDateString();
   }).length;
   
-  const upcomingWeek = mockPatients.filter(p => {
+  const upcomingWeek = patients.filter(p => {
     if (!p.nextCheckup) return false;
     const checkupDate = new Date(p.nextCheckup);
     const today = new Date();

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Search, Eye, Calendar, AlertCircle, Edit, Trash2 } from 'lucide-react';
 import { RefreshCw } from "lucide-react";
-// import { Patient } from './mockData';
 
 interface Patient {
   id: string;

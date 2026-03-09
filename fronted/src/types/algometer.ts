@@ -1,15 +1,3 @@
-// export type Patient = {
-//   id: string;
-//   name: string;
-//   age: number;
-//   gender: string;
-//   contact: string;
-//   diagnosis: string;
-//   lastVisit: string;
-//   status?: string;
-//   photo?: string;
-// };
-
 export interface Patient {
   id: string
 
