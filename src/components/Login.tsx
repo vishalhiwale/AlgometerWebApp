@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Stethoscope } from 'lucide-react';
+import { auth } from "../firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 interface LoginProps {
   onLogin: (name: string) => void;
@@ -10,19 +12,43 @@ export function Login({ onLogin }: LoginProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setError('');
 
-    // Mock authentication - in production, this would connect to a backend
-    if (email && password) {
-      // Extract doctor name from email
-      const name = email.split('@')[0].replace('.', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-      onLogin(name);
-    } else {
-      setError('Please enter both email and password');
-    }
-  };
+  //   // Mock authentication - in production, this would connect to a backend
+  //   if (email && password) {
+  //     // Extract doctor name from email
+  //     const name = email.split('@')[0].replace('.', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+  //     onLogin(name);
+  //   } else {
+  //     setError('Please enter both email and password');
+  //   }
+  // };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    const name =
+      userCredential.user.email?.split("@")[0]
+        .replace(".", " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase()) || "Doctor";
+
+    onLogin(name);
+
+  } catch (error: any) {
+  console.log("Firebase error:", error.code);
+  setError(error.message);
+}
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
