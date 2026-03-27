@@ -14,6 +14,7 @@ import { toast, Toaster } from 'sonner';
 import { ref, remove } from "firebase/database";
 import { db } from "./firebase";
 import ReadingTable from './components/ReadingTable';
+import { read } from 'fs';
 
 type Page = 'dashboard' | 'patients' | 'converter' | 'patient-detail' | 'readings';
 
@@ -67,12 +68,29 @@ export default function App() {
 
 const [readings, setReadings] = useState<any[]>([]);
 
+// Re-Formatting the Readings
+const formattingReadings = (data: any[]) => {
+  return data.map(reading => ({
+    ...reading,
+    readings: reading.readings.map((r: any) => ({
+      location: r.muscleName,
+      ppt: r.threshold,
+      pptol: r.tolerance
+    }))
+  }));
+};
+
 // Fucntion to fetch reading Data
 const fetchReadings = async (patientId: string) => {
   try {
     const res = await fetch(`http://localhost:5000/api/readings/${patientId}`);
     const data = await res.json();
-    setReadings(data);
+
+    console.log("Fetched Readings", data);
+    console.log("FIRST READING OBJECT:", data[0]);
+    console.log("INNER READINGS:", data[0]?.readings);
+    
+    setReadings(formattingReadings(data));
   } catch (error) {
     console.error("Failed to fetch readings", error);
   }
@@ -97,8 +115,10 @@ const fetchReadings = async (patientId: string) => {
     setCurrentPage('dashboard');
   };
 
-  const handleViewPatient = (patientId: string) => {
+  const handleViewPatient = async (patientId: string) => {
     setSelectedPatientId(patientId);
+    // setCurrentPage('patient-detail');
+    await fetchReadings(patientId);
     setCurrentPage('patient-detail');
   };
 
@@ -440,13 +460,15 @@ const handleEditPatient = async (updatedPatient: Patient) => {
               onEditReading={handleEditReading}
             />
           )}
+          
           {currentPage === 'patient-detail' && selectedPatientId && selectedPatient && (
             <PatientDetail 
               patientId={selectedPatientId} 
               patient={selectedPatient}
-              readings={readings.filter(r => r.patientId === selectedPatientId && r.status === 'committed')}
+              readings={readings.filter(
+                r => r.patientId === selectedPatientId && r.status === 'committed')}
               onBack={handleBackToPatients}
-              hasReadings={selectedPatient.hasReadings || false}
+              hasReadings={readings.length > 0}
               onTakeReadings={() => handleOpenReadingInterface(selectedPatientId)}
               onEditPatient={() => {
                 setEditingPatientId(selectedPatientId);
