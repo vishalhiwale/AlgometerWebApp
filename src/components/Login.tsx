@@ -2,12 +2,16 @@ import { useState } from 'react';
 import { Stethoscope } from 'lucide-react';
 import { auth } from "../firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import SignUp from "./SignUp";
+import { ref, get } from "firebase/database";
+import { db } from "../firebase";
 
 interface LoginProps {
   onLogin: (name: string) => void;
 }
 
 export function Login({ onLogin }: LoginProps) {
+  const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -25,6 +29,9 @@ export function Login({ onLogin }: LoginProps) {
   //     setError('Please enter both email and password');
   //   }
   // };
+  if (isSignup) {
+  return <SignUp onBack={() => setIsSignup(false)} />;
+}
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -37,12 +44,28 @@ export function Login({ onLogin }: LoginProps) {
       password
     );
 
-    const name =
-      userCredential.user.email?.split("@")[0]
-        .replace(".", " ")
-        .replace(/\b\w/g, (l) => l.toUpperCase()) || "Doctor";
+    // const name =
+    //   userCredential.user.email?.split("@")[0]
+    //     .replace(".", " ")
+    //     .replace(/\b\w/g, (l) => l.toUpperCase()) || "Doctor";
+
+    // onLogin(name);
+// inside handleSubmit after login success:
+
+    const user = userCredential.user;
+
+// fetch doctor data from database
+    const snapshot = await get(ref(db, "doctors/" + user.uid));
+
+    let name = "Doctor";
+
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      name = data.name;
+    }
 
     onLogin(name);
+
 
   } catch (error: any) {
   console.log("Firebase error:", error.code);
@@ -105,10 +128,19 @@ export function Login({ onLogin }: LoginProps) {
             Login
           </button>
 
-          <div className="text-center text-sm text-gray-500 mt-4">
+          {/* <div className="text-center text-sm text-gray-500 mt-4">
             Demo credentials: Use any email and password
-          </div>
+          </div> */}
         </form>
+        <p className="mt-4 text-center text-sm">
+          Don't have an account?{" "}
+          <span
+            className="text-blue-600 cursor-pointer"
+            onClick={() => setIsSignup(true)}
+          >
+            Sign Up
+          </span>
+        </p>
       </div>
     </div>
   );
