@@ -12,6 +12,9 @@ export interface Patient {
   lastVisit?: string
   status?: string
   photo?: string
+
+  lastVisitDate? : string
+  nextCheckupDate? : string
 }
 
 export interface MuscleReading {
@@ -34,4 +37,6 @@ export interface AlgometerReading {
   status: "saved" | "committed"
 
   timestamp?: string
+
+  createdAt? : string
 }

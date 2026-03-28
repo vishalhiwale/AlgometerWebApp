@@ -90,7 +90,8 @@ const fetchReadings = async (patientId: string) => {
     console.log("FIRST READING OBJECT:", data[0]);
     console.log("INNER READINGS:", data[0]?.readings);
     
-    setReadings(formattingReadings(data));
+    // setReadings(formattingReadings(data));
+    setReadings(data);
   } catch (error) {
     console.error("Failed to fetch readings", error);
   }
