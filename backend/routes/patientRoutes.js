@@ -31,6 +31,7 @@ router.post("/", upload.single("photo"), async (req, res) => {
 
     const patient = new Patient({
       ...req.body,
+      uid: req.body.uid,   // 🔥 ADD THIS LINE
       patientCode: newCode,
       photo: req.file ? req.file.filename : null
     });
@@ -45,9 +46,15 @@ router.post("/", upload.single("photo"), async (req, res) => {
 });
 
 // Get all patients
-router.get("/", async (req, res) => {
+// router.get("/", async (req, res) => {
+//   try {
+//     const patients = await Patient.find();
+  router.get("/", async (req, res) => {
   try {
-    const patients = await Patient.find();
+    const { uid } = req.query;   // 🔥 GET UID
+
+    const patients = await Patient.find({ uid });   // 🔥 FILTER
+
     res.json(patients);
   } catch (error) {
     res.status(500).json({ message: error.message });

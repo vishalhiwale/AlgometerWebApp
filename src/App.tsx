@@ -29,11 +29,12 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [doctorName, setDoctorName] = useState('');
+  const [uid, setUid] = useState("");
   
   // State for patients and readings
   const [patients, setPatients] = useState<Patient[]>([]);
   useEffect(() => {
-  fetch("http://localhost:5000/api/patients")
+  fetch(`http://localhost:5000/api/patients?uid=${uid}`)
     .then(res => res.json())
     .then(data => {
       const formatted = data.map((p: any) => ({
@@ -53,7 +54,7 @@ export default function App() {
       setPatients(formatted);
     })
     .catch(err => console.error("Failed to fetch patients", err));
-}, []);
+}, [uid]);
 
   const [readings, setReadings] = useState<AlgometerReading[]>(mockAlgometerReadings);
 
@@ -109,10 +110,15 @@ export default function App() {
   const [editingReading, setEditingReading] = useState<AlgometerReading | null>(null);
   const [preSelectedPatientId, setPreSelectedPatientId] = useState<string | null>(null);
 
-  const handleLogin = (name: string) => {
-    setDoctorName(name);
-    setIsLoggedIn(true);
-  };
+  // const handleLogin = (name: string) => {
+  //   setDoctorName(name);
+  //   setIsLoggedIn(true);
+  // };
+  const handleLogin = (name: string, userUid: string) => {
+  setDoctorName(name);
+  setUid(userUid);
+  setIsLoggedIn(true);
+};
 
   const handleLogout = () => {
     setIsLoggedIn(false);
@@ -441,7 +447,7 @@ const handleEditPatient = async (updatedPatient: Patient) => {
         {/* Main Content */}
         <main className="flex-1 p-6">
           {currentPage === 'dashboard' && (
-            <Dashboard />
+            <Dashboard doctorName={doctorName} uid={uid} />
           )}
           {currentPage === 'patients' && (
             <PatientDatabase 
@@ -485,6 +491,7 @@ const handleEditPatient = async (updatedPatient: Patient) => {
         <AddPatientModal
           onClose={() => setShowAddPatientModal(false)}
           onAddPatient={handleAddPatient}
+          uid={uid}
         />
       )}
 

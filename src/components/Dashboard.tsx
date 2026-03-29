@@ -1,22 +1,13 @@
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Users, Calendar, TrendingUp, Activity } from 'lucide-react';
 import { mockPatients } from './mockData';
+//import { mockPatients } from './mockData';
 
-export function Dashboard() {
-  // Calculate statistics
-  const totalPatients = mockPatients.length;
-  const todayAppointments = mockPatients.filter(p => {
-    const today = new Date();
-    return p.nextCheckup && new Date(p.nextCheckup).toDateString() === today.toDateString();
-  }).length;
-  
-  const upcomingWeek = mockPatients.filter(p => {
-    if (!p.nextCheckup) return false;
-    const checkupDate = new Date(p.nextCheckup);
-    const today = new Date();
-    const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-    return checkupDate >= today && checkupDate <= weekFromNow;
-  }).length;
+export function Dashboard({ doctorName, uid }: any) {  // Calculate statistics
+  const totalPatients = 0;
+  const todayAppointments = 0;  
+
+const upcomingWeek = 0;
 
   // Pain threshold trends
   const weeklyTrends = [

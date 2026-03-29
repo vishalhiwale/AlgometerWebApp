@@ -2,12 +2,17 @@ import { useState } from 'react';
 import { X, UserPlus } from 'lucide-react';
 import { Patient } from './mockData';
 
+// interface AddPatientModalProps {
+//   onClose: () => void;
+//   onAddPatient: (patient: Omit<Patient, 'id' | 'totalVisits' | 'hasReadings'>) => void;
+// }
 interface AddPatientModalProps {
   onClose: () => void;
-  onAddPatient: (patient: Omit<Patient, 'id' | 'totalVisits' | 'hasReadings'>) => void;
+  onAddPatient: (patient: any) => void;
+  uid: string;   // 🔥 ADD THIS
 }
 
-export function AddPatientModal({ onClose, onAddPatient }: AddPatientModalProps) {
+export function AddPatientModal({ onClose, onAddPatient, uid }: AddPatientModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     age: '',
@@ -74,8 +79,9 @@ const handleSubmit = async (e: React.FormEvent) => {
         diagnosis: formData.diagnosis,
         lastVisitDate: formData.lastVisit,
         nextCheckupDate: formData.nextCheckup,
-        status: formData.status
-      })
+        status: formData.status,
+        uid   // 🔥 THIS IS THE KEY LINE  
+        })  
     });
 
     const savedPatient = await response.json();

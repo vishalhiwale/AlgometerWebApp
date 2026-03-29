@@ -7,7 +7,7 @@ import { ref, get } from "firebase/database";
 import { db } from "../firebase";
 
 interface LoginProps {
-  onLogin: (name: string) => void;
+  onLogin: (name: string, uid: string) => void;
 }
 
 export function Login({ onLogin }: LoginProps) {
@@ -64,7 +64,7 @@ export function Login({ onLogin }: LoginProps) {
       name = data.name;
     }
 
-    onLogin(name);
+    onLogin(name, user.uid);
 
 
   } catch (error: any) {
