@@ -24,6 +24,8 @@ export function PatientDetail({
   onEditPatient, 
   onDeletePatient 
 }: PatientDetailProps) {
+  console.log("patient: ", patient);
+  const [visibleMuscles, setVisibleMuscles] = React.useState<string[]>([]);
   // Sort readings by timestamp
   const sortedReadings = [...readings].sort((a, b) => 
     new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
@@ -42,6 +44,32 @@ export function PatientDetail({
   const allLocations = Array.from(
     new Set(readings.flatMap(r => r.readings.map(lr => lr.muscleName)))
   );
+
+  React.useEffect(() => {
+    if (visibleMuscles.length === 0 && allLocations.length > 0){
+      setVisibleMuscles(allLocations);
+    }
+  }, [allLocations]);
+
+  const toggleMuscle = (muscle: string) => {
+    setVisibleMuscles(prev =>{
+      if(prev.includes(muscle)){
+        if (prev.length === 1) return prev;
+        return prev.filter(m => m !== muscle)
+      }
+      return [...prev, muscle];
+    });
+  };
+
+  const showAllMuscles = () => {
+    setVisibleMuscles(allLocations);
+  }
+
+  const hideAllMuscles = () => {
+    if (allLocations.length > 0) {
+      setVisibleMuscles([allLocations[0]]);
+    }
+  }
 
   // Prepare data for Pain Threshold Progression chart
   const progressionData = sortedReadings.map(reading => {
@@ -66,14 +94,11 @@ export function PatientDetail({
     return dataPoint;
   });
 
-  //Debug Line
-  console.log("Progression Data: ", progressionData);
-
   // Prepare data for Current Pain Map (Radar chart) - using latest reading
-  const radarData = latestReading?.readings.map(r => ({
+  const radarData = latestReading?.readings.slice(0, 6).map(r => ({
     muscleName: r.muscleName,
-    PPT: r.threshold || 0,
-    PPTol: r.tolerance || 0
+    PPT: r.threshold ?? undefined,
+    PPTol: r.tolerance ?? undefined
   })) || [];
 
   // Prepare measurement points for body diagram
@@ -113,8 +138,6 @@ export function PatientDetail({
       day: '2-digit',
       month: 'short',
       year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
     });
   };
 
@@ -165,12 +188,12 @@ export function PatientDetail({
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
-            <p className="text-gray-600 text-sm mb-1">Patient Name</p>
-            <p className="text-gray-900">{patient.name}</p>
-          </div>
-          <div>
             <p className="text-gray-600 text-sm mb-1">Patient ID</p>
             <p className="text-gray-900">{patient.id}</p>
+          </div>
+          <div>
+            <p className="text-gray-600 text-sm mb-1">Patient Name</p>
+            <p className="text-gray-900">{patient.name}</p>
           </div>
           <div>
             <p className="text-gray-600 text-sm mb-1">Age / Gender</p>
@@ -188,19 +211,19 @@ export function PatientDetail({
             <p className="text-gray-600 text-sm mb-1">Last Visit</p>
             <p className="text-gray-900 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-400" />
-              {patient.lastVisit}
+              {latestReading ? formatDate(latestReading.createdAt) : "Not visits yet"}
             </p>
           </div>
           <div>
             <p className="text-gray-600 text-sm mb-1">Next Checkup</p>
             <p className="text-gray-900 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-400" />
-              {patient.nextCheckupDate || 'Not scheduled'}
+              {formatDate(patient.nextCheckupDate) || 'Not Scheduled'}
             </p>
           </div>
           <div>
             <p className="text-gray-600 text-sm mb-1">Total Visits</p>
-            <p className="text-gray-900">{patient.totalVisits}</p>
+            <p className="text-gray-900">{readings.length}</p>
           </div>
         </div>
       </div>
@@ -263,6 +286,7 @@ export function PatientDetail({
                   Pain Threshold Progression (kPa)
                 </h3>
 
+
                 <div className="flex items-center gap-6 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-0.5 bg-gray-800"></div>
@@ -272,27 +296,55 @@ export function PatientDetail({
                     <div className="w-6 border-t-2 border-dashed border-gray-800"></div>
                     <span className="font-semibold">PPTol</span>
                   </div>
+                  
                 </div>
 
               </div>
 
-              {/* Row 2: Muscle legend (centered) */}
-              <div className="flex flex-wrap justify-end gap-x-6 gap-3">
-                {allLocations.map((muscleName) => {
-                  const color = muscleNameColors[
-                    allLocations.indexOf(muscleName) % muscleNameColors.length
-                  ];
+              <div className='flex items-center justify-between'>
+                <div className="flex items-center justify-start gap-2 ">
+                  <button
+                    onClick={showAllMuscles}
+                    className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 transition"
+                  >
+                    Show All
+                  </button>
+                  <button
+                    onClick={hideAllMuscles}
+                    className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 transition"
+                  >
+                    Hide All
+                  </button>
+                </div>
 
-                  return (
-                    <div key={muscleName} className="flex items-center gap-1">
-                      <div 
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: color }}
-                      />
-                      <span className="text-sm text-gray-700 text-transform: capitalize">{muscleName}</span>
-                    </div>
-                  );
-                })}
+                {/* Row 2: Muscle legend (right-side) */} 
+                <div className="flex flex-wrap justify-end gap-x-6 gap-3 cursor-pointer">
+                  {allLocations.map((muscleName) => {
+                    const color = muscleNameColors[
+                      allLocations.indexOf(muscleName) % muscleNameColors.length
+                    ];
+
+                    const isActive = visibleMuscles.includes(muscleName);
+
+                    return (
+                      <button
+                        key={muscleName}
+                        onClick={() => toggleMuscle(muscleName)}
+                        className={`flex items-center gap-1 px-2 py-1 rounded transition
+                          ${isActive ? "opacity-100" : "opacity-40"}
+                        `}
+                      >
+                        <div 
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span className="text-sm text-gray-700 capitalize">
+                          {muscleName}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
             </div>
@@ -328,7 +380,10 @@ export function PatientDetail({
                       wrapperStyle={{ fontSize: '12px'}}
                     /> */}
 
-                    {allLocations.map((muscleName, idx) => {
+                    {/* {allLocations.map((muscleName, idx) => { */}
+                    {allLocations
+                      .filter(muscleName => visibleMuscles.includes(muscleName))
+                      .map((muscleName, idx) => {
                       // const color = muscleNameColors[idx % muscleNameColors.length];
                       const color = muscleNameColors[
                         allLocations.indexOf(muscleName) % muscleNameColors.length
@@ -379,25 +434,43 @@ export function PatientDetail({
                 </h3>
                 <ResponsiveContainer width="100%" height={400}>
                   <RadarChart data={radarData}>
-                    <PolarGrid />
-                    <PolarAngleAxis dataKey="muscleName" />
-                    <PolarRadiusAxis angle={90} />
-                    <Radar name="PPT (kPa)" dataKey="PPT" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.5} />
-                    <Radar name="PPTol (kPa)" dataKey="PPTol" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
-                    <Tooltip />
+                    <PolarGrid stroke='#e5e7eb'/>
+                    <PolarAngleAxis 
+                      dataKey="muscleName"
+                      tick={{ fontSize: 12}}
+                    />
+                    <PolarRadiusAxis 
+                      angle={90}
+                      domain={[0, 'auto']} 
+                      tick={{ fontSize: 10}}
+                    />
+                    <Radar 
+                      name="Threshold (kPa)" dataKey="PPT"
+                      stroke="#2563eb" fill="#2563eb"
+                      fillOpacity={0.4}
+                    />
+                    <Radar 
+                      name="Tolerance (kPa)" dataKey="PPTol"
+                      stroke="#059669" fill="#059669"
+                      fillOpacity={0.25} 
+                    />
+                    <Tooltip 
+                      formatter={(value, name) => [`${value} kPa`, name]}
+                      contentStyle={{ borderRadius: '8px' }}
+                    />
                     <Legend />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
 
               {/* Body Diagram */}
-              <div>
+              {/* <div>
                 <h3 className="text-gray-900 mb-4">Body Measurement Points</h3>
                 <BodyDiagram 
                   gender={patient.gender as 'Male' | 'Female'} 
                   measurementPoints={measurementPoints}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         </>

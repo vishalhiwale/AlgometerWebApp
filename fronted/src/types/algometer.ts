@@ -9,7 +9,7 @@ export interface Patient {
   contact: string
   diagnosis: string
 
-  lastVisit?: string
+  // lastVisit?: string
   status?: string
   photo?: string
 

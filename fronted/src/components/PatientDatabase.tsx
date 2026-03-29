@@ -11,7 +11,7 @@ interface Patient {
   contact?: string;
   diagnosis?: string;
   lastVisit?: string | null;
-  nextCheckup?: string | null;
+  nextCheckupDate?: string | null;
   status?: "active" | "discharged";
   totalVisits?: number;
 }
@@ -49,6 +49,14 @@ export function PatientDatabase({
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'overdue' | 'discharged'>('all');
 
+    const formatDate = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      });
+    };
+    
 const filteredPatients = patients.filter((patient) => {
   const name = patient.name?.toLowerCase() || "";
   const id = patient.id?.toLowerCase() || "";
@@ -69,8 +77,8 @@ const filteredPatients = patients.filter((patient) => {
   }
 
   const today = new Date();
-  const checkupDate = patient.nextCheckup
-    ? new Date(patient.nextCheckup)
+  const checkupDate = patient.nextCheckupDate
+    ? new Date(patient.nextCheckupDate)
     : null;
 
   if (filterStatus === "upcoming") {
@@ -84,25 +92,26 @@ const filteredPatients = patients.filter((patient) => {
   return true;
 });
 
-  const getStatusBadge = (nextCheckup: string | null, status?: 'active' | 'discharged') => {
+  const getStatusBadge = (nextCheckupDate: string | null, status?: 'active' | 'discharged') => {
     if (status === 'discharged') {
       return <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">Discharged</span>;
     }
-
-    if (!nextCheckup) {
-      return <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Not Scheduled</span>;
+    if (!nextCheckupDate) {
+      return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">Awaiting</span>;
     }
 
     const today = new Date();
-    const checkupDate = new Date(nextCheckup);
+    const checkupDate = new Date(nextCheckupDate);
     const daysUntil = Math.ceil((checkupDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (daysUntil < 0) {
+    if (nextCheckupDate && daysUntil < 0) {
       return <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">Overdue</span>;
-    } else if (daysUntil <= 7) {
-      return <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">Upcoming</span>;
-    } else {
-      return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Scheduled</span>;
+    } else if (nextCheckupDate && daysUntil <= 7) {
+      return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Upcoming</span>;
+    } else if (nextCheckupDate && daysUntil > 7){
+      return <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">Scheduled</span>;
+    }else {
+      return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">Awaiting</span>;
     }
   };
 
@@ -212,12 +221,12 @@ const filteredPatients = patients.filter((patient) => {
                   <td className="px-6 py-4 text-gray-700">{patient.lastVisit}</td>
                   <td className="px-6 py-4 text-gray-700">
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                      {patient.nextCheckup || 'Not scheduled'}
+                      <Calendar className="w-10 h-4 text-gray-400" />
+                      {formatDate(patient.nextCheckupDate) || 'Not scheduled'}
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    {getStatusBadge(patient.nextCheckup, patient.status)}
+                    {getStatusBadge(formatDate(patient.nextCheckupDate), patient.status)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">

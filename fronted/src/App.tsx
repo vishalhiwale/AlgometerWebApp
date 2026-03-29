@@ -45,8 +45,8 @@ export default function App() {
       gender: p.gender,
       contact: p.contact,
       diagnosis: p.diagnosis,
-      lastVisit: p.lastVisitDate,
-      nextCheckup: p.nextCheckupDate,
+      lastVisitDate: p.lastVisitDate,
+      nextCheckupDate: p.nextCheckupDate,
       status: p.status || "active",
       totalVisits: 0,
       hasReadings: false
@@ -87,7 +87,7 @@ const fetchReadings = async (patientId: string) => {
     const data = await res.json();
 
     console.log("Fetched Readings", data);
-    console.log("FIRST READING OBJECT:", data[0]);
+    console.log("LAST READING OBJECT:", data[0]);
     console.log("INNER READINGS:", data[0]?.readings);
     
     // setReadings(formattingReadings(data));
@@ -152,8 +152,8 @@ const fetchReadings = async (patientId: string) => {
       gender: saved.gender,
       contact: saved.contact,
       diagnosis: saved.diagnosis,
-      lastVisit: saved.lastVisitDate,
-      nextCheckup: saved.nextCheckupDate,
+      lastVisitDate: saved.lastVisitDate,
+      nextCheckupDate: saved.nextCheckupDate,
       status: saved.status,
       totalVisits: 0,
       hasReadings: false
@@ -185,7 +185,7 @@ const handleEditPatient = async (updatedPatient: Patient) => {
           contact: updatedPatient.contact,
           diagnosis: updatedPatient.diagnosis,
           lastVisitDate: updatedPatient.lastVisit,
-          nextCheckupDate: updatedPatient.nextCheckup,
+          nextCheckupDate: updatedPatient.nextCheckupDate,
           status: updatedPatient.status
         })
       }
@@ -201,8 +201,8 @@ const handleEditPatient = async (updatedPatient: Patient) => {
         gender: data.gender,
         contact: data.contact,
         diagnosis: data.diagnosis,
-        lastVisit: data.lastVisitDate,
-        nextCheckup: data.nextCheckupDate,
+        lastVisitDate: data.lastVisitDate,
+        nextCheckupDate: data.nextCheckupDate,
         status: data.status,
         totalVisits: 0,
         hasReadings: p.hasReadings
