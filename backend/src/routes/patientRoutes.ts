@@ -72,6 +72,10 @@ export default router;
 //PUT Request to Edit Details
 router.put("/:id", async (req, res) => {
   try {
+
+    console.log("Update ID:", req.params.id);
+    console.log("Update Body:", req.body);
+
     const updatedPatient = await Patient.findByIdAndUpdate(
       req.params.id,
       req.body,

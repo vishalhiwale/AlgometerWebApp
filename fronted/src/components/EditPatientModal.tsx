@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Save } from 'lucide-react';
+// import {} 
 
 interface EditPatientModalProps {
   patient: Patient;
@@ -7,7 +8,17 @@ interface EditPatientModalProps {
   onEditPatient: (patient: Patient) => void;
 }
 
-export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatientModalProps) {
+export function EditPatientModal({ 
+  patient, 
+  onClose,
+  onEditPatient 
+}: EditPatientModalProps) {
+
+  const formatDate = (date?: string | null) =>{
+    if (!date) return ""
+    return new Date(date).toISOString().split("T")[0];
+  };
+
   const [formData, setFormData] = useState({
     name: patient.name || "",
     // age: patient.age.toString(),
@@ -15,8 +26,8 @@ export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatien
     gender: patient.gender || "Male",
     contact: patient.contact || "",
     diagnosis: patient.diagnosis || "",
-    lastVisit: patient.lastVisit || "",
-    nextCheckup: patient.nextCheckup || "",
+    lastVisitDate: formatDate(patient.lastVisitDate) || "",
+    nextCheckupDate: formatDate(patient.nextCheckupDate) || "",
     status: patient.status || "active",
     photo: patient.photo || ""
   });
@@ -55,7 +66,6 @@ export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatien
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     // Validate required fields
     if (!formData.name || !formData.age || !formData.contact || !formData.diagnosis) {
       alert('Please fill in all required fields');
@@ -77,7 +87,7 @@ export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatien
       contact: formData.contact,
       diagnosis: formData.diagnosis,
       lastVisit: formData.lastVisit,
-      nextCheckup: formData.nextCheckup || null,
+      nextCheckupDate: formData.nextCheckupDate || null,
       status: formData.status as 'active' | 'discharged',
       photo: formData.photo
     });
@@ -219,8 +229,8 @@ export function EditPatientModal({ patient, onClose, onEditPatient }: EditPatien
               </label>
               <input
                 type="date"
-                value={formData.nextCheckup ?? ""}
-                onChange={(e) => setFormData({ ...formData, nextCheckup: e.target.value })}
+                value={formData.nextCheckupDate ?? ""}
+                onChange={(e) => setFormData({ ...formData, nextCheckupDate: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

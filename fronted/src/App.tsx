@@ -145,7 +145,7 @@ const fetchReadings = async (patientId: string) => {
     const saved = await res.json();
 
     const formatted = {
-      id: saved.patientId,
+      id: saved._id,
       patientCode: saved.patientCode,
       name: saved.name,
       age: saved.age,
@@ -184,18 +184,22 @@ const handleEditPatient = async (updatedPatient: Patient) => {
           gender: updatedPatient.gender,
           contact: updatedPatient.contact,
           diagnosis: updatedPatient.diagnosis,
-          lastVisitDate: updatedPatient.lastVisit,
+          lastVisitDate: updatedPatient.lastVisitDate,
           nextCheckupDate: updatedPatient.nextCheckupDate,
           status: updatedPatient.status
         })
       }
     );
 
+    if (!res.ok){
+      throw new Error("Update faild");
+    }
+
     const data = await res.json();
 
     setPatients(prev =>
-      prev.map(p => p.id === data.patientId ? {
-        id: data.patientId,
+      prev.map(p => p.id === data._id ? {
+        id: data._id,
         name: data.name,
         age: data.age,
         gender: data.gender,

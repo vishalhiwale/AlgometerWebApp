@@ -49,14 +49,28 @@ export function PatientDatabase({
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'overdue' | 'discharged'>('all');
 
-    const formatDate = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      });
+    // const formatDate = (timestamp: string) => {
+    // return new Date(timestamp).toLocaleString('en-IN', {
+    //   day: '2-digit',
+    //   month: 'short',
+    //   year: 'numeric',
+    //   });
+    // };
+    const formatDate = (date: string) => {
+      if (!date) return null;
+      return new Date(date).toLocaleDateString("en-GB");
     };
-    
+
+const columns = [
+  { key: "patientCode", label: "Patient ID" },
+  { key: "name", label: "Name" },
+  { key: "age", label: "Age" },
+  { key: "diagnosis", label: "Diagnosis" },
+  { key: "lastVisit", label: "Last Visit" },
+  { key: "nextCheckupDate", label: "Next Checkup" },
+  { key: "status", label: "Status" },
+];
+
 const filteredPatients = patients.filter((patient) => {
   const name = patient.name?.toLowerCase() || "";
   const id = patient.id?.toLowerCase() || "";
@@ -106,9 +120,11 @@ const filteredPatients = patients.filter((patient) => {
 
     if (nextCheckupDate && daysUntil < 0) {
       return <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">Overdue</span>;
-    } else if (nextCheckupDate && daysUntil <= 7) {
+    } else if (nextCheckupDate && daysUntil == 0) {
+      return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Today</span>;
+    }else if (nextCheckupDate && daysUntil <= 7 && daysUntil > 0) {
       return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Upcoming</span>;
-    } else if (nextCheckupDate && daysUntil > 7){
+    }else if (nextCheckupDate && daysUntil > 7){
       return <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">Scheduled</span>;
     }else {
       return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">Awaiting</span>;
@@ -198,59 +214,79 @@ const filteredPatients = patients.filter((patient) => {
       {/* Patient Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-gray-700">Patient ID</th>
-                <th className="px-6 py-4 text-left text-gray-700">Name</th>
-                <th className="px-6 py-4 text-left text-gray-700">Age</th>
-                <th className="px-6 py-4 text-left text-gray-700">Diagnosis</th>
-                <th className="px-6 py-4 text-left text-gray-700">Last Visit</th>
-                <th className="px-6 py-4 text-left text-gray-700">Next Checkup</th>
-                <th className="px-6 py-4 text-left text-gray-700">Status</th>
-                <th className="px-6 py-4 text-left text-gray-700">Actions</th>
+                {columns.map((col) => (
+                  <th key={col.key} className="px-5 py-4 text-left text-greay-800 font-bold whitespace-nowrap">
+                    {col.label}
+                  </th>
+                ))}
+                <th className="px-6 py-3 text-center text-grey-600 font-bold">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            
+            <tbody className="divide-y divide-gray-100">
               {filteredPatients.map((patient) => (
-                <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 text-gray-900">{patient.patientCode}</td>
-                  <td className="px-6 py-4 text-gray-900">{patient.name}</td>
-                  <td className="px-6 py-4 text-gray-700">{patient.age}</td>
-                  <td className="px-6 py-4 text-gray-700">{patient.diagnosis}</td>
-                  <td className="px-6 py-4 text-gray-700">{patient.lastVisit}</td>
-                  <td className="px-6 py-4 text-gray-700">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-10 h-4 text-gray-400" />
-                      {formatDate(patient.nextCheckupDate) || 'Not scheduled'}
-                    </div>
-                  </td>
+                <tr 
+                  key={patient.id}
+                  onClick={() => onViewPatient(patient.id)}
+                  className="hover:bg-blue-50 cursor-pointer transition">
+                  
+                  {columns.map((col) => {
+                    let value = patient[col.key];
+
+                    // Custom rendering
+                    if (col.key === "nextCheckupDate") {
+                      value = formatDate(value) || "Not scheduled";
+                    }
+
+                    if (col.key === "status") {
+                      return (
+                        <td key={col.key} className="px-6 py-4">
+                          {getStatusBadge(patient.nextCheckupDate, patient.status)}
+                        </td>
+                      );
+                    }
+
+                    return (
+                      <td key={col.key} className="px-5 py-4 text-left text-gray-700 whitespace-nowrap">
+                        {value || "-"}
+                      </td>
+                    );
+                  })}
+
+                  {/* Actions */}
                   <td className="px-6 py-4">
-                    {getStatusBadge(formatDate(patient.nextCheckupDate), patient.status)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex gap-2">
                       <button
                         onClick={() => onViewPatient(patient.id)}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs"
                       >
-                        <Eye className="w-4 h-4" />
                         View
                       </button>
+
                       {onEditPatient && (
                         <button
-                          onClick={() => onEditPatient(patient.id)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditPatient(patient.id);
+                          }}
+                          className="px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-xs"
                         >
-                          <Edit className="w-4 h-4" />
+                          Edit
                         </button>
                       )}
+
                       {onDeletePatient && (
                         <button
-                          onClick={() => onDeletePatient(patient.id)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeletePatient(patient.id);
+                          }}
+                          className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-xs"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          Delete
                         </button>
                       )}
                     </div>
