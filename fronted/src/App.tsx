@@ -15,6 +15,7 @@ import { ref, remove } from "firebase/database";
 import { db } from "./firebase";
 import ReadingTable from './components/ReadingTable';
 import { read } from 'fs';
+import { throwDeprecation } from 'process';
 
 type Page = 'dashboard' | 'patients' | 'converter' | 'patient-detail' | 'readings';
 
@@ -86,9 +87,9 @@ const fetchReadings = async (patientId: string) => {
     const res = await fetch(`http://localhost:5000/api/readings/${patientId}`);
     const data = await res.json();
 
-    console.log("Fetched Readings", data);
-    console.log("LAST READING OBJECT:", data[0]);
-    console.log("INNER READINGS:", data[0]?.readings);
+    // console.log("Fetched Readings", data);
+    // console.log("LAST READING OBJECT:", data[0]);
+    // console.log("INNER READINGS:", data[0]?.readings);
     
     // setReadings(formattingReadings(data));
     setReadings(data);
@@ -199,7 +200,7 @@ const handleEditPatient = async (updatedPatient: Patient) => {
 
     setPatients(prev =>
       prev.map(p => p.id === data._id ? {
-        id: data._id,
+        patientCode: data.patientCode,
         name: data.name,
         age: data.age,
         gender: data.gender,
@@ -286,22 +287,48 @@ const handleEditPatient = async (updatedPatient: Patient) => {
   const handleCommitReading = async(readingInfo : ReadingInfo, id?: string)=> {
   try {
     
+    let response;
+
     if(id) {
        // UPDATE existing reading
-      await fetch(`http://localhost:5000/api/readings/${id}`, {
+      response = await fetch(`http://localhost:5000/api/readings/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(readingInfo)
       });
     }else{
       //CREATE new reading
-      await fetch("http://localhost:5000/api/readings", {
+      response = await fetch("http://localhost:5000/api/readings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(readingInfo),
       });
     }
     
+    if(!response.ok) throw new Error("Commit failed");
+
+    const today = new Date().toISOString();
+
+    // Update Last Date in Databse
+    response = await fetch(`http://localhost:5000/api/patients/${readingInfo.patientId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lastVisitDate: today
+      })
+    });
+
+    if(!response.ok) throw new Error("Failed to save Last Visit Date");
+
+    // Update Fronted Instantly
+    setPatients(prev =>
+      prev.map(p =>
+        p.id === readingInfo.patientId
+          ? { ...p, lastVisitDate: today }
+          : p
+      )
+    );
+
     toast.success("Reading commited successfully");
 
   } catch (error) {
@@ -346,7 +373,7 @@ const handleEditPatient = async (updatedPatient: Patient) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-gray-900">YourHealth Management System</h1>
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Health Management System</h1>
               <p className="text-gray-600 text-sm mt-1">Welcome, Dr. {doctorName}</p>
             </div>
             <div className="flex items-center gap-3">

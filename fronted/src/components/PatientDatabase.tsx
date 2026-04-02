@@ -47,7 +47,7 @@ export function PatientDatabase({
   isRefreshing
 }: PatientDatabaseProps){
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'overdue' | 'discharged'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'today' | 'upcoming' | 'overdue' | 'discharged'>('all');
 
     // const formatDate = (timestamp: string) => {
     // return new Date(timestamp).toLocaleString('en-IN', {
@@ -66,7 +66,7 @@ const columns = [
   { key: "name", label: "Name" },
   { key: "age", label: "Age" },
   { key: "diagnosis", label: "Diagnosis" },
-  { key: "lastVisit", label: "Last Visit" },
+  { key: "lastVisitDate", label: "Last Visit" },
   { key: "nextCheckupDate", label: "Next Checkup" },
   { key: "status", label: "Status" },
 ];
@@ -76,35 +76,43 @@ const filteredPatients = patients.filter((patient) => {
   const id = patient.id?.toLowerCase() || "";
   const diagnosis = patient.diagnosis?.toLowerCase() || "";
   const search = searchTerm.toLowerCase();
+  
+  //debugging line
+  // console.log("In filteredPatients");
 
   const matchesSearch =
     name.includes(search) ||
     id.includes(search) ||
     diagnosis.includes(search);
 
-  if (!matchesSearch) return false;
+    if (!matchesSearch) return false;
 
-  if (filterStatus === "all") return true;
+    if (filterStatus === "all") return true;
 
-  if (filterStatus === "discharged") {
-    return patient.status === "discharged";
-  }
+    if (filterStatus === "discharged") {
+      return patient.status === "discharged";
+    }
 
-  const today = new Date();
-  const checkupDate = patient.nextCheckupDate
-    ? new Date(patient.nextCheckupDate)
-    : null;
+    const today = new Date().toLocaleDateString("en-GB");
+    // console.log("todays date: ", today);
+    const checkupDate = patient.nextCheckupDate
+      ? new Date(patient.nextCheckupDate).toLocaleDateString("en-GB")
+      : null;
 
-  if (filterStatus === "upcoming") {
-    return checkupDate && checkupDate >= today && patient.status !== "discharged";
-  }
+    if (filterStatus === "today") {
+      return checkupDate && checkupDate == today && patient.status !== "discharged";
+    }
 
-  if (filterStatus === "overdue") {
-    return checkupDate && checkupDate < today && patient.status !== "discharged";
-  }
+    if (filterStatus === "upcoming") {
+      return checkupDate && checkupDate > today && patient.status !== "discharged";
+    }
 
-  return true;
-});
+    if (filterStatus === "overdue") {
+      return checkupDate && checkupDate < today && patient.status !== "discharged";
+    }
+
+    return true;
+  });
 
   const getStatusBadge = (nextCheckupDate: string | null, status?: 'active' | 'discharged') => {
     if (status === 'discharged') {
@@ -116,7 +124,12 @@ const filteredPatients = patients.filter((patient) => {
 
     const today = new Date();
     const checkupDate = new Date(nextCheckupDate);
-    const daysUntil = Math.ceil((checkupDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    // const daysUntil = Math.ceil((checkupDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const daysUntil = Math.round((checkupDate.getTime() - today.getTime()) / (1000*60*60*24)) ;
+
+    // console.log("Today: ",today);
+    // console.log("checkup date:, ",nextCheckupDate);
+    // console.log(daysUntil);
 
     if (nextCheckupDate && daysUntil < 0) {
       return <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">Overdue</span>;
@@ -136,7 +149,8 @@ const filteredPatients = patients.filter((patient) => {
       <div>
         {/* <h2 className="text-gray-900">Patient Database</h2> */}
         <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Patient Database</h1>
+              {/* <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Patient Database</h1> */}
+              <h2 className="text-2xl font-bold text-gray-700 tracking-tight">Patient Database</h2>
           {onRefresh && (
             <button
               onClick={onRefresh}
@@ -176,6 +190,16 @@ const filteredPatients = patients.filter((patient) => {
               }`}
             >
               All
+            </button>
+            <button
+              onClick={() => setFilterStatus('today')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                filterStatus === 'today'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Today
             </button>
             <button
               onClick={() => setFilterStatus('upcoming')}
@@ -229,28 +253,31 @@ const filteredPatients = patients.filter((patient) => {
             <tbody className="divide-y divide-gray-100">
               {filteredPatients.map((patient) => (
                 <tr 
-                  key={patient.id}
+                  key={`${patient.id}-`}
                   onClick={() => onViewPatient(patient.id)}
                   className="hover:bg-blue-50 cursor-pointer transition">
                   
                   {columns.map((col) => {
                     let value = patient[col.key];
 
-                    // Custom rendering
-                    if (col.key === "nextCheckupDate") {
+                    // Custom rendering for Dates and Status
+                    if (col.key === "nextCheckupDate" ) {
                       value = formatDate(value) || "Not scheduled";
+                    }
+                    if (col.key === "lastVisitDate") {
+                      value = formatDate(value) || "No record";
                     }
 
                     if (col.key === "status") {
                       return (
-                        <td key={col.key} className="px-6 py-4">
+                        <td key={`${patient.id}-${col.key}`} className="px-6 py-4">
                           {getStatusBadge(patient.nextCheckupDate, patient.status)}
                         </td>
                       );
                     }
 
                     return (
-                      <td key={col.key} className="px-5 py-4 text-left text-gray-700 whitespace-nowrap">
+                      <td key={`${patient.id}-${col.key}`} className="px-5 py-4 text-left text-gray-700 whitespace-nowrap">
                         {value || "-"}
                       </td>
                     );

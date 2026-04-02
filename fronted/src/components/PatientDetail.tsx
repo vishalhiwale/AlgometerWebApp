@@ -24,7 +24,7 @@ export function PatientDetail({
   onEditPatient, 
   onDeletePatient 
 }: PatientDetailProps) {
-  console.log("patient: ", patient);
+  // console.log("patient: ", patient);
   const [visibleMuscles, setVisibleMuscles] = React.useState<string[]>([]);
   // Sort readings by timestamp
   const sortedReadings = [...readings].sort((a, b) => 

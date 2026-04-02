@@ -86,7 +86,7 @@ export function EditPatientModal({
       gender: formData.gender,
       contact: formData.contact,
       diagnosis: formData.diagnosis,
-      lastVisit: formData.lastVisit,
+      lastVisitDate: formData.lastVisitDate,
       nextCheckupDate: formData.nextCheckupDate || null,
       status: formData.status as 'active' | 'discharged',
       photo: formData.photo
@@ -215,8 +215,8 @@ export function EditPatientModal({
               </label>
               <input
                 type="date"
-                value={formData.lastVisit ?? ""}
-                onChange={(e) => setFormData({ ...formData, lastVisit: e.target.value })}
+                value={formData.lastVisitDate ?? ""}
+                onChange={(e) => setFormData({ ...formData, lastVisitDate: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />

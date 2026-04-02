@@ -82,8 +82,9 @@ export function UnitConverter() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-gray-900">Unit Converter</h2>
-        <p className="text-gray-600 mt-1">Convert between different pressure measurement units used in algometry</p>
+        {/* <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Unit Converter</h1> */}
+        <h2 className="text-2xl font-bold text-gray-700 tracking-tight">Unit Converter</h2>
+        {/* <p className="text-gray-600 mt-1">Convert between different pressure measurement units used in algometry</p> */}
       </div>
 
       {/* Converter Card */}
