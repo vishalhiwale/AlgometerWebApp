@@ -24,7 +24,7 @@ export function Login({ onLogin }: LoginProps) {
   //   if (email && password) {
   //     // Extract doctor name from email
   //     const name = email.split('@')[0].replace('.', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-  //     onLogin(name);
+  //      
   //   } else {
   //     setError('Please enter both email and password');
   //   }
@@ -43,6 +43,7 @@ export function Login({ onLogin }: LoginProps) {
       email,
       password
     );
+    console.log("LOGIN UID:", userCredential.user.uid);
 
     // const name =
     //   userCredential.user.email?.split("@")[0]
@@ -51,7 +52,6 @@ export function Login({ onLogin }: LoginProps) {
 
     // onLogin(name);
 // inside handleSubmit after login success:
-
     const user = userCredential.user;
 
 // fetch doctor data from database

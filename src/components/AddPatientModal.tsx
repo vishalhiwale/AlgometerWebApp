@@ -66,23 +66,44 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 
   try {
+    const data = new FormData();
+
+    data.append("name", formData.name);
+    data.append("age", String(formData.age));
+    data.append("gender", formData.gender);
+    data.append("contact", formData.contact);
+    data.append("diagnosis", formData.diagnosis);
+    data.append("lastVisitDate", formData.lastVisit);
+    data.append("nextCheckupDate", formData.nextCheckup);
+    data.append("status", formData.status);
+    console.log("UID being sent:", uid);
+    data.append("uid", uid);   // 🔥 IMPORTANT
+
+    if (formData.photo) {
+      data.append("photo", formData.photo);
+    }
+
     const response = await fetch("http://localhost:5000/api/patients", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name: formData.name,
-        age: Number(formData.age),
-        gender: formData.gender,
-        contact: formData.contact,
-        diagnosis: formData.diagnosis,
-        lastVisitDate: formData.lastVisit,
-        nextCheckupDate: formData.nextCheckup,
-        status: formData.status,
-        uid   // 🔥 THIS IS THE KEY LINE  
-        })  
+      body: data   // ❌ NO headers
     });
+    // const response = await fetch("http://localhost:5000/api/patients", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json"
+    //   },
+    //   body: JSON.stringify({
+    //     name: formData.name,
+    //     age: Number(formData.age),
+    //     gender: formData.gender,
+    //     contact: formData.contact,
+    //     diagnosis: formData.diagnosis,
+    //     lastVisitDate: formData.lastVisit,
+    //     nextCheckupDate: formData.nextCheckup,
+    //     status: formData.status,
+    //     uid   // 🔥 THIS IS THE KEY LINE  
+    //     })  
+    // });
 
     const savedPatient = await response.json();
 

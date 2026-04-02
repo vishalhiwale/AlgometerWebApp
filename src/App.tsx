@@ -34,25 +34,29 @@ export default function App() {
   // State for patients and readings
   const [patients, setPatients] = useState<Patient[]>([]);
   useEffect(() => {
-  fetch(`http://localhost:5000/api/patients?uid=${uid}`)
-    .then(res => res.json())
-    .then(data => {
-      const formatted = data.map((p: any) => ({
-  id: p._id,                 // internal MongoDB id (used for edit/delete)
-  patientCode: p.patientCode, // <-- ADD THIS
-  name: p.name,
-  age: p.age,
-  gender: p.gender,
-  contact: p.contact,
-  diagnosis: p.diagnosis,
-  lastVisit: p.lastVisitDate,
-  nextCheckup: p.nextCheckupDate,
-  status: p.status || "active",
-  totalVisits: 0,
-  hasReadings: false
-}));
-      setPatients(formatted);
-    })
+    if (!uid) return;   // 🔥 STOP if uid not ready
+
+      fetch(`http://localhost:5000/api/patients?uid=${uid}`)
+        .then(res => res.json())
+        .then(data => {
+          console.log("Fetched patients:", data);  // 🔥 DEBUG
+          const formatted = data.map((p: any) => ({
+            id: p._id,                 // internal MongoDB id (used for edit/delete)
+            patientCode: p.patientCode, // <-- ADD THIS
+            name: p.name,
+            age: p.age,
+            gender: p.gender,
+            contact: p.contact,
+            diagnosis: p.diagnosis,
+            lastVisit: p.lastVisitDate,
+            nextCheckup: p.nextCheckupDate,
+            status: p.status || "active",
+            totalVisits: 0,
+            hasReadings: false
+          }));
+
+          setPatients(formatted);
+      })
     .catch(err => console.error("Failed to fetch patients", err));
 }, [uid]);
 
@@ -115,10 +119,11 @@ export default function App() {
   //   setIsLoggedIn(true);
   // };
   const handleLogin = (name: string, userUid: string) => {
-  setDoctorName(name);
-  setUid(userUid);
-  setIsLoggedIn(true);
-};
+    console.log("UID stored in App:", userUid);
+    setDoctorName(name);
+    setUid(userUid);
+    setIsLoggedIn(true);
+  };
 
   const handleLogout = () => {
     setIsLoggedIn(false);

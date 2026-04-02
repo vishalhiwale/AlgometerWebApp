@@ -29,9 +29,22 @@ router.post("/", upload.single("photo"), async (req, res) => {
       newCode = "P" + String(nextNumber).padStart(3, "0");
     }
 
+    // const patient = new Patient({
+    //   ...req.body,
+    //   uid: req.body.uid,   // 🔥 ADD THIS LINE
+    //   patientCode: newCode,
+    //    photo: req.file ? req.file.filename : null
+    // });
     const patient = new Patient({
-      ...req.body,
-      uid: req.body.uid,   // 🔥 ADD THIS LINE
+      name: req.body.name,
+      age: req.body.age,
+      gender: req.body.gender,
+      contact: req.body.contact,
+      diagnosis: req.body.diagnosis,
+      lastVisitDate: req.body.lastVisitDate,
+      nextCheckupDate: req.body.nextCheckupDate,
+      status: req.body.status,
+      uid: req.body.uid,   // 🔥 FORCE IT
       patientCode: newCode,
       photo: req.file ? req.file.filename : null
     });
@@ -53,7 +66,11 @@ router.post("/", upload.single("photo"), async (req, res) => {
   try {
     const { uid } = req.query;   // 🔥 GET UID
 
+    console.log("UID received in backend:", uid);   // 🔥 ADD THIS
+
     const patients = await Patient.find({ uid });   // 🔥 FILTER
+
+    console.log("UID received in backend:", uid);   // 🔥 ADD THIS
 
     res.json(patients);
   } catch (error) {
