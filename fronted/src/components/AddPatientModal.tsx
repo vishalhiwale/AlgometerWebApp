@@ -13,8 +13,8 @@ export function AddPatientModal({ onClose, onAddPatient }: AddPatientModalProps)
     gender: 'Male',
     contact: '+91-',
     diagnosis: '',
-    lastVisit: new Date().toISOString().split('T')[0],
-    nextCheckup: '',
+    lastVisitDate: new Date().toISOString().split('T')[0],
+    nextCheckupDate: '',
     status: 'active' as 'active' | 'discharged',
     photo: null as File | null
   });
@@ -66,8 +66,8 @@ const handleSubmit = (e: React.FormEvent) => {
     gender: formData.gender,
     contact: formData.contact,
     diagnosis: formData.diagnosis,
-    lastVisit: formData.lastVisit,
-    nextCheckup: formData.nextCheckup,
+    lastVisitDate: formData.lastVisitDate,
+    nextCheckupDate: formData.nextCheckupDate,
     status: formData.status
   });
 
@@ -215,8 +215,8 @@ const handleSubmit = (e: React.FormEvent) => {
               </label>
               <input
                 type="date"
-                value={formData.lastVisit}
-                onChange={(e) => setFormData({ ...formData, lastVisit: e.target.value })}
+                value={formData.lastVisitDate}
+                onChange={(e) => setFormData({ ...formData, lastVisitDate: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -229,8 +229,8 @@ const handleSubmit = (e: React.FormEvent) => {
               </label>
               <input
                 type="date"
-                value={formData.nextCheckup}
-                onChange={(e) => setFormData({ ...formData, nextCheckup: e.target.value })}
+                value={formData.nextCheckupDate}
+                onChange={(e) => setFormData({ ...formData, nextCheckupDate: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

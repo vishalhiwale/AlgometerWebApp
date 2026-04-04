@@ -211,7 +211,7 @@ export function PatientDetail({
             <p className="text-gray-600 text-sm mb-1">Last Visit</p>
             <p className="text-gray-900 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-400" />
-              {latestReading ? formatDate(latestReading.createdAt) : "Not visits yet"}
+              {latestReading ? formatDate(latestReading.createdAt) : (patient.lastVisitDate? formatDate(patient.lastVisitDate) : "Not Visit yet")}
             </p>
           </div>
           <div>

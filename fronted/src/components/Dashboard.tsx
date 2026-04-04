@@ -96,8 +96,8 @@ export function Dashboard() {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Total Patients</p>
-              <p className="text-gray-900 mt-2">{totalPatients}</p>
+              <p className="px-2 py-2 rounded-lg text-sm font-medium">Total Patients</p>
+              <p className="text-center text-sm font-medium">{totalPatients}</p>
             </div>
             <div className="bg-blue-50 p-3 rounded-lg">
               <Users className="w-6 h-6 text-blue-600" />
@@ -108,7 +108,7 @@ export function Dashboard() {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Today's Appointments</p>
+              <p className="px-2 py-2 rounded-lg text-sm font-medium">Today's Appointments</p>
               <p className="text-gray-900 mt-2">{todayAppointments}</p>
             </div>
             <div className="bg-green-50 p-3 rounded-lg">
@@ -120,7 +120,7 @@ export function Dashboard() {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Upcoming (7 days)</p>
+              <p className="px-2 py-2 rounded-lg text-sm font-medium">Upcoming (7 days)</p>
               <p className="text-gray-900 mt-2">{upcomingWeek}</p>
             </div>
             <div className="bg-orange-50 p-3 rounded-lg">
@@ -132,7 +132,7 @@ export function Dashboard() {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Avg Pain Threshold</p>
+              <p className="px-2 py-2 rounded-lg text-sm font-medium">Avg Pain Threshold</p>
               <p className="text-gray-900 mt-2">28.5 N/cm²</p>
             </div>
             <div className="bg-purple-50 p-3 rounded-lg">

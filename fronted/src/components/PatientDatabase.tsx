@@ -10,7 +10,7 @@ interface Patient {
   gender: string;
   contact?: string;
   diagnosis?: string;
-  lastVisit?: string | null;
+  lastVisitDate?: string | null;
   nextCheckupDate?: string | null;
   status?: "active" | "discharged";
   totalVisits?: number;
@@ -48,6 +48,16 @@ export function PatientDatabase({
 }: PatientDatabaseProps){
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'today' | 'upcoming' | 'overdue' | 'discharged'>('all');
+
+  type FilterStatus = "all" | "today" | "upcoming" | "overdue" | "discharged";
+
+  const tabs: { key: FilterStatus; label: string }[] = [
+    { key: "all", label: "All" },
+    { key: "today", label: "Today" },
+    { key: "upcoming", label: "Upcoming" },
+    { key: "overdue", label: "Overdue" },
+    { key: "discharged", label: "Discharged" },
+  ];
 
     // const formatDate = (timestamp: string) => {
     // return new Date(timestamp).toLocaleString('en-IN', {
@@ -93,23 +103,24 @@ const filteredPatients = patients.filter((patient) => {
       return patient.status === "discharged";
     }
 
-    const today = new Date().toLocaleDateString("en-GB");
+    const today = new Date()
     // console.log("todays date: ", today);
     const checkupDate = patient.nextCheckupDate
-      ? new Date(patient.nextCheckupDate).toLocaleDateString("en-GB")
-      : null;
+      ? new Date(patient.nextCheckupDate)
+      : null; 
 
     if (filterStatus === "today") {
       return checkupDate && checkupDate == today && patient.status !== "discharged";
+    }
+    
+    if (filterStatus === "overdue") {
+      return checkupDate && checkupDate < today && patient.status !== "discharged";
     }
 
     if (filterStatus === "upcoming") {
       return checkupDate && checkupDate > today && patient.status !== "discharged";
     }
 
-    if (filterStatus === "overdue") {
-      return checkupDate && checkupDate < today && patient.status !== "discharged";
-    }
 
     return true;
   });
@@ -170,6 +181,8 @@ const filteredPatients = patients.filter((patient) => {
       {/* Search and Filters */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div className="flex flex-col md:flex-row gap-4">
+          
+          {/* Search  */}
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -180,57 +193,22 @@ const filteredPatients = patients.filter((patient) => {
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setFilterStatus('all')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                filterStatus === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilterStatus('today')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                filterStatus === 'today'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Today
-            </button>
-            <button
-              onClick={() => setFilterStatus('upcoming')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                filterStatus === 'upcoming'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Upcoming
-            </button>
-            <button
-              onClick={() => setFilterStatus('overdue')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                filterStatus === 'overdue'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Overdue
-            </button>
-            <button
-              onClick={() => setFilterStatus('discharged')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                filterStatus === 'discharged'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Discharged
-            </button>
+
+          {/* Selecting Filter Status */}
+          <div className="flex bg-gray-100 rounded-xl p-1 flex-wrap">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setFilterStatus(tab.key)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  filterStatus === tab.key
+                    ? "bg-white shadow text-blue-600"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -242,18 +220,18 @@ const filteredPatients = patients.filter((patient) => {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 {columns.map((col) => (
-                  <th key={col.key} className="px-5 py-4 text-left text-greay-800 font-bold whitespace-nowrap">
+                  <th key={col.key} className="px-5 py-4 text-left font-bold whitespace-nowrap">
                     {col.label}
                   </th>
                 ))}
-                <th className="px-6 py-3 text-center text-grey-600 font-bold">Actions</th>
+                <th className="px-5 py-4 text-center font-bold">Actions</th>
               </tr>
             </thead>
             
             <tbody className="divide-y divide-gray-100">
               {filteredPatients.map((patient) => (
                 <tr 
-                  key={`${patient.id}-`}
+                  key={patient.id}
                   onClick={() => onViewPatient(patient.id)}
                   className="hover:bg-blue-50 cursor-pointer transition">
                   
@@ -277,15 +255,15 @@ const filteredPatients = patients.filter((patient) => {
                     }
 
                     return (
-                      <td key={`${patient.id}-${col.key}`} className="px-5 py-4 text-left text-gray-700 whitespace-nowrap">
+                      <td key={`${patient.id}-${col.key}`} className="px-6 py-4 text-left text-grey-600 font-medium break-words">
                         {value || "-"}
                       </td>
                     );
                   })}
 
                   {/* Actions */}
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
+                  <td className="flex px-6 py-4 h-screen:2  items-center justify-center">
+                    <div className="flex gap-x-6 ">
                       <button
                         onClick={() => onViewPatient(patient.id)}
                         className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs"

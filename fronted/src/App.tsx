@@ -370,7 +370,8 @@ const handleEditPatient = async (updatedPatient: Patient) => {
       
       {/* Header */}
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 py-4"> */}
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Health Management System</h1>
@@ -398,9 +399,10 @@ const handleEditPatient = async (updatedPatient: Patient) => {
         </div>
       </header>
 
-      <div className="flex max-w-7xl mx-auto">
+      {/* <div className="flex max-w-7xl mx-auto"> */}
+      <div className="flex w-full">
         {/* Sidebar Navigation */}
-        <nav className="w-64 bg-white shadow-sm min-h-[calc(100vh-80px)] p-4">
+        <nav className="w-64 min-w-[16rem] flex-shrink-0 bg-white shadow-sm min-h-[calc(100vh-80px)] p-4">
           <ul className="space-y-2">
             <li>
               <button
