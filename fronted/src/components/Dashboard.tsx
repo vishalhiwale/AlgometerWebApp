@@ -84,6 +84,48 @@ export function Dashboard() {
     { date: '2025-01-28', forehead: 29, cheek: 27, chin: 31, masseter: 25 },
   ];
 
+  // Stats Cards
+  type StatCard = {
+    label: string;
+    value: string | number;
+    icon: React.ElementType;
+    color: string;
+  };
+
+  const stats: StatCard[] = [
+    {
+      label: "Total Patients",
+      value: totalPatients,
+      icon: Users,
+      color: "blue",
+    },
+    {
+      label: "Today's Appointments",
+      value: todayAppointments,
+      icon: Calendar,
+      color: "green",
+    },
+    {
+      label: "Upcoming (7 days)",
+      value: upcomingWeek,
+      icon: TrendingUp,
+      color: "orange",
+    },
+    {
+      label: "Avg Pain Threshold",
+      value: "28.5 N/cm²",
+      icon: Activity,
+      color: "purple",
+    },
+  ];
+  
+  const colorMap = {
+    blue: "bg-blue-50 text-blue-600",
+    green: "bg-green-50 text-green-600",
+    orange: "bg-orange-50 text-orange-600",
+    purple: "bg-purple-50 text-purple-600",
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -92,7 +134,7 @@ export function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
@@ -109,7 +151,7 @@ export function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="px-2 py-2 rounded-lg text-sm font-medium">Today's Appointments</p>
-              <p className="text-gray-900 mt-2">{todayAppointments}</p>
+              <p className="text-center text-sm font-medium">{todayAppointments}</p>
             </div>
             <div className="bg-green-50 p-3 rounded-lg">
               <Calendar className="w-6 h-6 text-green-600" />
@@ -121,7 +163,7 @@ export function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="px-2 py-2 rounded-lg text-sm font-medium">Upcoming (7 days)</p>
-              <p className="text-gray-900 mt-2">{upcomingWeek}</p>
+              <p className="text-center text-sm font-medium">{upcomingWeek}</p>
             </div>
             <div className="bg-orange-50 p-3 rounded-lg">
               <TrendingUp className="w-6 h-6 text-orange-600" />
@@ -133,13 +175,40 @@ export function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="px-2 py-2 rounded-lg text-sm font-medium">Avg Pain Threshold</p>
-              <p className="text-gray-900 mt-2">28.5 N/cm²</p>
+              <p className="text-center text-sm font-medium">28.5 N/cm²</p>
             </div>
             <div className="bg-purple-50 p-3 rounded-lg">
               <Activity className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>
+      </div> */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+
+          return (
+            <div
+              key={index}
+              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="px-2 py-2 rounded-lg text-sm font-medium">
+                    {stat.label}
+                  </p>
+                  <p className="text-center text-sm font-medium">
+                    {stat.value}
+                  </p>
+                </div>
+
+                <div className={`p-3 rounded-lg ${colorMap[stat.color]}`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Charts Grid */}
