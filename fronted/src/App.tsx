@@ -39,7 +39,7 @@ export default function App() {
     const data = await res.json();
 
     const formatted = data.map((p: any) => ({
-      id: p._id,
+      id: p._id || p.id,
       patientCode: p.patientCode,
       name: p.name,
       age: p.age,
@@ -200,6 +200,7 @@ const handleEditPatient = async (updatedPatient: Patient) => {
 
     setPatients(prev =>
       prev.map(p => p.id === data._id ? {
+        id: data._id,
         patientCode: data.patientCode,
         name: data.name,
         age: data.age,

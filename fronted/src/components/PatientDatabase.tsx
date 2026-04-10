@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search, Eye, Calendar, AlertCircle, Edit, Trash2 } from 'lucide-react';
 import { RefreshCw } from "lucide-react";
+import { PatientDetail } from "./PatientDetail";
 
 interface Patient {
   id: string;
@@ -47,7 +48,7 @@ export function PatientDatabase({
   isRefreshing
 }: PatientDatabaseProps){
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'today' | 'upcoming' | 'overdue' | 'discharged'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'today' | 'upcoming' | 'overdue' | 'awaiting' | 'discharged'>('all');
 
   type FilterStatus = "all" | "today" | "upcoming" | "overdue" | "discharged";
 
@@ -57,6 +58,7 @@ export function PatientDatabase({
     { key: "upcoming", label: "Upcoming" },
     { key: "overdue", label: "Overdue" },
     { key: "discharged", label: "Discharged" },
+    { key: "awaiting", label: "Awaiting"}
   ];
 
     // const formatDate = (timestamp: string) => {
@@ -81,6 +83,22 @@ const columns = [
   { key: "status", label: "Status" },
 ];
 
+const dateStatus = (nextCheckupDate: string | null) => { // Added '=' here
+  if (!nextCheckupDate) {
+    return 'Null';
+  }
+
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  const checkupDate = new Date(nextCheckupDate);
+
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysUntil = Math.round((checkupDate.getTime() - today.getTime()) / msPerDay);
+
+  return daysUntil;
+};
+
 const filteredPatients = patients.filter((patient) => {
   const name = patient.name?.toLowerCase() || "";
   const id = patient.id?.toLowerCase() || "";
@@ -102,27 +120,33 @@ const filteredPatients = patients.filter((patient) => {
     if (filterStatus === "discharged") {
       return patient.status === "discharged";
     }
+    // const today = new Date()
+    // // console.log("todays date: ", today);
+    // const checkupDate = patient.nextCheckupDate
+    //   ? new Date(patient.nextCheckupDate)
+    //   : null; 
 
-    const today = new Date()
-    // console.log("todays date: ", today);
-    const checkupDate = patient.nextCheckupDate
-      ? new Date(patient.nextCheckupDate)
-      : null; 
-
-    if (filterStatus === "today") {
-      return checkupDate && checkupDate == today && patient.status !== "discharged";
+    if(patient.nextCheckupDate ){
+      const duration = dateStatus(patient.nextCheckupDate)
+      
+      if (filterStatus === "today") {
+        return duration == 0 && patient.status !== "discharged";
+      }
+      
+      if (filterStatus === "upcoming" && duration!='Null') {
+        return duration>0 && patient.status !== "discharged";
+      }
+      
+      if (filterStatus === "overdue" && duration!='Null') {
+        return  duration < 0 && patient.status !== "discharged";
+      }
     }
-    
-    if (filterStatus === "overdue") {
-      return checkupDate && checkupDate < today && patient.status !== "discharged";
+    if(!patient.nextCheckupDate){
+      if (filterStatus === "awaiting") {
+        return patient.status !== "discharged";
+      }
     }
-
-    if (filterStatus === "upcoming") {
-      return checkupDate && checkupDate > today && patient.status !== "discharged";
-    }
-
-
-    return true;
+    // return true;
   });
 
   const getStatusBadge = (nextCheckupDate: string | null, status?: 'active' | 'discharged') => {
@@ -132,27 +156,34 @@ const filteredPatients = patients.filter((patient) => {
     if (!nextCheckupDate) {
       return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">Awaiting</span>;
     }
-
-    const today = new Date();
-    const checkupDate = new Date(nextCheckupDate);
-    // const daysUntil = Math.ceil((checkupDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    const daysUntil = Math.round((checkupDate.getTime() - today.getTime()) / (1000*60*60*24)) ;
-
-    // console.log("Today: ",today);
-    // console.log("checkup date:, ",nextCheckupDate);
-    // console.log(daysUntil);
-
-    if (nextCheckupDate && daysUntil < 0) {
-      return <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">Overdue</span>;
-    } else if (nextCheckupDate && daysUntil == 0) {
-      return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Today</span>;
-    }else if (nextCheckupDate && daysUntil <= 7 && daysUntil > 0) {
-      return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Upcoming</span>;
-    }else if (nextCheckupDate && daysUntil > 7){
-      return <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">Scheduled</span>;
-    }else {
-      return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">Awaiting</span>;
+    else{
+      // const today = new Date(`${new Date().toISOString().split('T')[0]}T00:00:00.0000Z`);
+      // const today = new Date()
+      // today.setUTCHours(0, 0, 0, 0);
+      // const checkupDate = new Date(nextCheckupDate);
+      // // const daysUntil = Math.ceil((checkupDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      // const daysUntil = Math.round((checkupDate.getTime() - today.getTime()) / (1000*60*60*24)) ;
+      
+      const daysUntil = dateStatus(nextCheckupDate)
+      // Debugging Code
+      // console.log("Today: ",today);
+      // console.log("checkup date:, ",checkupDate);
+      // console.log(daysUntil);
+      if(daysUntil!='Null'){
+        if (daysUntil < 0) {
+          return <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">Overdue</span>;
+        } else if (daysUntil == 0) {
+          return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Today</span>;
+        }else if (daysUntil <= 7 && daysUntil > 0) {
+          return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Upcoming</span>;
+        }else if (daysUntil > 7){
+          return <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">Scheduled</span>;
+        }else {
+          return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">Awaiting</span>;
+        }
+      }
     }
+
   };
 
   return (
@@ -248,14 +279,14 @@ const filteredPatients = patients.filter((patient) => {
 
                     if (col.key === "status") {
                       return (
-                        <td key={`${patient.id}-${col.key}`} className="px-6 py-4">
+                        <td key={`${patient.id || patient.patientCode}-${col.key}`} className="px-6 py-4">
                           {getStatusBadge(patient.nextCheckupDate, patient.status)}
                         </td>
                       );
                     }
 
                     return (
-                      <td key={`${patient.id}-${col.key}`} className="px-6 py-4 text-left text-grey-600 font-medium break-words">
+                      <td key={`${patient.id || patient.patientCode}-${col.key}`} className="px-6 py-4 text-left text-grey-600 font-medium break-words">
                         {value || "-"}
                       </td>
                     );
