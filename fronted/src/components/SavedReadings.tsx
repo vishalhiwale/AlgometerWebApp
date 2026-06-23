@@ -1,4 +1,4 @@
-import { Activity, Calendar, User, FileText } from 'lucide-react';
+import { Activity, Calendar, User, FileText, ClipboardPlusIcon } from 'lucide-react';
 import { useEffect, useState } from "react"
 import { AlgometerReading } from '../types/algometer';
 
@@ -57,16 +57,16 @@ interface SavedReadingsProps {
           onClick={onOpenReadingInterface}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
-          <Activity className="w-4 h-4" />
+          <ClipboardPlusIcon className="w-4 h-4" />
           Take New Reading
         </button>
       </div>
 
       {savedReadings.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-          <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">No saved readings</p>
-          <p className="text-gray-500 text-sm mt-1">Take new readings to see them here</p>
+          {/* <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" /> */}
+          <p className="text-gray-600 text-xl font-semibold">No saved readings</p>
+          <p className="text-gray-500 text-base mt-1">Take new readings to see them here</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

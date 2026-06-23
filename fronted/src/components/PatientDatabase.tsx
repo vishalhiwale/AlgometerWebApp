@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Eye, Calendar, AlertCircle, Edit, Trash2 } from 'lucide-react';
+import { Search, Eye, Calendar, AlertCircle, Edit, Trash2, ViewIcon, Trash2Icon, TrashIcon, EyeIcon } from 'lucide-react';
 import { RefreshCw } from "lucide-react";
 import { PatientDetail } from "./PatientDetail";
 
@@ -251,7 +251,7 @@ const filteredPatients = patients.filter((patient) => {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 {columns.map((col) => (
-                  <th key={col.key} className="px-5 py-4 text-left font-bold whitespace-nowrap">
+                  <th key={col.key} className="px-5 py-4 text-left text-base font-bold whitespace-nowrap">
                     {col.label}
                   </th>
                 ))}
@@ -259,7 +259,7 @@ const filteredPatients = patients.filter((patient) => {
               </tr>
             </thead>
             
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
               {filteredPatients.map((patient) => (
                 <tr 
                   key={patient.id}
@@ -293,13 +293,14 @@ const filteredPatients = patients.filter((patient) => {
                   })}
 
                   {/* Actions */}
-                  <td className="flex px-6 py-4 h-screen:2  items-center justify-center">
+                  <td className="px-6 py-4 text-center vertically-middle">
                     <div className="flex gap-x-6 ">
                       <button
                         onClick={() => onViewPatient(patient.id)}
-                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs"
+                        className="px-3 py-1 border border-blue-500 border-2x bg-blue-400 text-white text-xs font-semibold flex items-center gap-1 rounded-lg hover:bg-blue-500"
                       >
-                        View
+                        <EyeIcon className="w-4 h-4"/>
+                        <span>View</span>
                       </button>
 
                       {onEditPatient && (
@@ -308,9 +309,10 @@ const filteredPatients = patients.filter((patient) => {
                             e.stopPropagation();
                             onEditPatient(patient.id);
                           }}
-                          className="px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-xs"
+                          className="px-3 py-1 border border-amber-500 border-2x bg-amber-400 text-white text-xs font-semibold flex item-center gap-1 rounded-lg hover:bg-amber-500"
                         >
-                          Edit
+                          <Edit className="w-4 h-4"/>
+                          <span>Edit</span>
                         </button>
                       )}
 
@@ -320,9 +322,10 @@ const filteredPatients = patients.filter((patient) => {
                             e.stopPropagation();
                             onDeletePatient(patient.id);
                           }}
-                          className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-xs"
+                          className="px-3 py-1 border border-red-500 bg-red-400 text-white text-xs font-semibold flex items-center gap-1 rounded-lg hover:bg-red-500"
                         >
-                          Delete
+                          <TrashIcon className="w-4 h-4" />
+                          <span>Delete</span>
                         </button>
                       )}
                     </div>
