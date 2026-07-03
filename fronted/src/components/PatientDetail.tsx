@@ -1,5 +1,5 @@
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
-import { ArrowLeft, Calendar, FileText, TrendingUp, MapPin, Activity } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, TrendingUp, MapPin, Activity, PenBoxIcon, DeleteIcon, DrumstickIcon, TrashIcon, Edit, ClipboardPlusIcon } from 'lucide-react';
 import { BodyDiagram } from './BodyDiagram';
 import { Patient, AlgometerReading } from '../types/algometer';
 import React from 'react';
@@ -133,7 +133,9 @@ export function PatientDetail({
     '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#84cc16'
   ];
 
-  const formatDate = (timestamp: string) => {
+  const formatDate = (timestamp: string | undefined) => {
+    if (!timestamp) return null;
+
     return new Date(timestamp).toLocaleString('en-IN', {
       day: '2-digit',
       month: 'short',
@@ -152,33 +154,33 @@ export function PatientDetail({
           <ArrowLeft className="w-5 h-5 text-gray-700" />
         </button>
         <div className="flex-1">
-          <h2 className="text-gray-900">Patient Details</h2>
-          <p className="text-gray-600 mt-1">Complete medical record and algometer data</p>
+          <h2 className="text-2xl font-bold text-gray-700 tracking-tight">Patient Details</h2>
+          {/* <p className="text-gray-600 mt-1">Complete medical record and algometer data</p> */}
         </div>
         {!hasReadings && (
           <button
             onClick={onTakeReadings}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
           >
-            <Activity className="w-4 h-4" />
+            <ClipboardPlusIcon className="w-4 h-4" />
             Take Algometer Readings
           </button>
         )}
         {onEditPatient && (
           <button
             onClick={onEditPatient}
-            className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-amber-400 text-white font-semibold rounded-lg hover:bg-amber-500 transition-colors flex items-center gap-2"
           >
-            <FileText className="w-4 h-4" />
+            <Edit className="w-4 h-4" />
             Edit Patient
           </button>
         )}
         {onDeletePatient && (
           <button
             onClick={onDeletePatient}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-red-400 text-white font-semibold rounded-lg hover:bg-red-500 transition-colors flex items-center gap-2"
           >
-            <FileText className="w-4 h-4" />
+            <TrashIcon className="w-4 h-4" />
             Delete Patient
           </button>
         )}
@@ -188,42 +190,42 @@ export function PatientDetail({
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
-            <p className="text-gray-600 text-sm mb-1">Patient ID</p>
-            <p className="text-gray-900">{patient.id}</p>
+            <p className="text-gray-900 font-medium">Patient ID</p>
+            <p className="text-gray-900 text-md">{patient.id}</p>
           </div>
           <div>
-            <p className="text-gray-600 text-sm mb-1">Patient Name</p>
-            <p className="text-gray-900">{patient.name}</p>
+            <p className="text-gray-900 font-medium">Patient Name</p>
+            <p className="text-gray-900 text-md">{patient.name}</p>
           </div>
           <div>
-            <p className="text-gray-600 text-sm mb-1">Age / Gender</p>
-            <p className="text-gray-900">{patient.age} / {patient.gender}</p>
+            <p className="text-gray-900 font-medium">Age / Gender</p>
+            <p className="text-gray-900 text-md">{patient.age} / {patient.gender}</p>
           </div>
           <div>
-            <p className="text-gray-600 text-sm mb-1">Contact</p>
-            <p className="text-gray-900">{patient.contact}</p>
+            <p className="text-gray-900 font-medium">Contact</p>
+            <p className="text-gray-900 text-md">{patient.contact}</p>
           </div>
           <div>
-            <p className="text-gray-600 text-sm mb-1">Diagnosis</p>
-            <p className="text-gray-900">{patient.diagnosis}</p>
+            <p className="text-gray-900 font-medium">Diagnosis</p>
+            <p className="text-gray-900 text-md">{patient.diagnosis}</p>
           </div>
           <div>
-            <p className="text-gray-600 text-sm mb-1">Last Visit</p>
-            <p className="text-gray-900 flex items-center gap-2">
+            <p className="text-gray-900 font-medium">Last Visit</p>
+            <p className="text-gray-900 text-md flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-400" />
               {latestReading ? formatDate(latestReading.createdAt) : (patient.lastVisitDate? formatDate(patient.lastVisitDate) : "Not Visit yet")}
             </p>
           </div>
           <div>
-            <p className="text-gray-600 text-sm mb-1">Next Checkup</p>
-            <p className="text-gray-900 flex items-center gap-2">
+            <p className="text-gray-900 font-medium">Next Checkup</p>
+            <p className="text-gray-900 text-md flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-400" />
               {formatDate(patient.nextCheckupDate) || 'Not Scheduled'}
             </p>
           </div>
           <div>
-            <p className="text-gray-600 text-sm mb-1">Total Visits</p>
-            <p className="text-gray-900">{readings.length}</p>
+            <p className="text-gray-900 font-medium">Total Visits</p>
+            <p className="text-gray-900 text-md">{readings.length}</p>
           </div>
         </div>
       </div>
@@ -231,31 +233,36 @@ export function PatientDetail({
       {/* Latest Readings */}
       {hasReadings && latestReading && (
         <>
-          <div className="flex justify-end">
-            <button
-              onClick={onTakeReadings}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <Activity className="w-4 h-4" />
-              Take New Algometer Readings
-            </button>
-          </div>
           
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-gray-900 mb-4 flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Latest Algometer Readings (kPa)
-            </h3>
+
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-gray-900 flex items-center gap-2 font-bold">
+                <FileText className="w-5 h-5" />
+                Latest Algometer Readings (kPa)
+              </h3>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={onTakeReadings}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                >
+                  <ClipboardPlusIcon className="w-4 h-4" />
+                  Take New Readings
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {latestReading.readings.map((reading, idx) => (
-                <div key={reading._id} className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-                  <p className="text-gray-700 text-sm mb-2">{reading.muscleName}</p>
+                <div key={reading._id} className="shadow-sm rounded-lg p-4 bg-gray-50 border-grey-300">
+                  <p className="text-gray-900 text-md font-medium mb-2">{reading.muscleName}</p>
                   <div className="space-y-1">
-                    <p className="text-blue-900">
-                      <span className="text-xs text-gray-600">PPT:</span> {reading.threshold !== null ? `${reading.threshold} kPa` : 'N/A'}
+                    <p className="text-grey-900">
+                      <span className="text-md text-gray-600">Threshold:</span> {reading.threshold !== null ? `${reading.threshold} kPa` : 'N/A'}
                     </p>
-                    <p className="text-blue-900">
-                      <span className="text-xs text-gray-600">PPTol:</span> {reading.tolerance !== null ? `${reading.tolerance} kPa` : 'N/A'}
+                    <p className="text-grey-900">
+                      <span className="text-md text-gray-600">Tolerance:</span> {reading.tolerance !== null ? `${reading.tolerance} kPa` : 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -263,7 +270,7 @@ export function PatientDetail({
             </div>
             {latestReading.doctorNotes && (
               <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-gray-700 text-sm mb-1">Doctor's Notes:</p>
+                <p className="text-gray-900 text-md font-medium mb-2">Doctor's Notes:</p>
                 <p className="text-gray-600">{latestReading.doctorNotes}</p>
               </div>
             )}
@@ -281,7 +288,7 @@ export function PatientDetail({
               {/* Row 1: Heading + PPT/PPTol */}
               <div className="flex items-center justify-between">
 
-                <h3 className="text-gray-900 flex items-center gap-2 font-bold">
+                <h3 className="text-gray-900 text-md flex items-center gap-2 font-bold">
                   <TrendingUp className="w-5 h-5" />
                   Pain Threshold Progression (kPa)
                 </h3>
@@ -428,7 +435,7 @@ export function PatientDetail({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Radar Chart */}
               <div>
-                <h3 className="text-gray-900 mb-4 flex items-center gap-2">
+                <h3 className="text-gray-900 mb-4 font-bold flex items-center gap-2">
                   <MapPin className="w-5 h-5" />
                   Current Pain Map (Latest Reading)
                 </h3>
@@ -485,18 +492,34 @@ export function PatientDetail({
       {/* Visit History */}
       {hasReadings && readings.length > 0 && (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-gray-900 mb-4">Visit History</h3>
+          <h3 className="text-gray-900 text-md font-bold mb-4">Visit History</h3>
           <div className="space-y-3">
             {sortedReadings.reverse().map((reading, index) => (
-              <div key={reading._id} className="border-l-4 border-blue-500 pl-4 py-2 bg-gray-50 rounded">
+              <div key={reading._id} className="border-l-4 border-blue-500 pl-4 py-2 bg-gray-50 rounded-md shadow-sm bg-grey">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <p className="text-gray-900">{formatDate(reading.createdAt)}</p>
-                    <p className="text-gray-700 mt-1">
-                      {reading.readings.length} muscleName{reading.readings.length !== 1 ? 's' : ''} measured
-                    </p>
+
+                    {/* Print Date */}
+                    <p className="flex text-gray-900 font-medium text-sm">{formatDate(reading.createdAt)}</p>
+
+                    {/* Print Muslce or Muscles */}
+                    <div className='flex justify-start gap-2'>
+                      {reading.readings.length} muscle{reading.readings.length !== 1 ? 's' : ''} measured
+
+                      {/* print muscle names in bracket */}
+                      <div className="flex justify-between">
+                        ( {reading.readings.map((reading, idx) => (
+                        <p className='flex' key={idx} >
+                          {reading.muscleName}
+                          {idx < readings.length - 1 && ", "}
+                        </p>
+                        ))} )
+                      </div>
+                    </div>
+
+                    {/* print doctor's note */}
                     {reading.doctorNotes && (
-                      <p className="text-gray-600 mt-1 text-sm italic">"{reading.doctorNotes}"</p>
+                      <p className="text-gray-600 mt-1 ">{reading.doctorNotes?? "{No Doctor Note}"}</p>
                     )}
                   </div>
                   <span className="text-gray-600 text-sm">{reading.takenBy}</span>

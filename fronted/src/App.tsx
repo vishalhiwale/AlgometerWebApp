@@ -8,7 +8,7 @@ import { SavedReadings } from './components/SavedReadings';
 import { AlgometerReadingInterface } from './components/AlgometerReadingInterface';
 import { AddPatientModal } from './components/AddPatientModal';
 import { EditPatientModal } from './components/EditPatientModal';
-import { LayoutDashboard, LogOut, Activity, Users, Calculator, UserPlus } from 'lucide-react';
+import { LayoutDashboard, LogOut, Activity, Users, Calculator, UserPlus, BoldIcon, Icon } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 
 import { ref, remove } from "firebase/database";
@@ -39,7 +39,7 @@ export default function App() {
     const data = await res.json();
 
     const formatted = data.map((p: any) => ({
-      id: p._id,
+      id: p._id || p.id,
       patientCode: p.patientCode,
       name: p.name,
       age: p.age,
@@ -200,6 +200,7 @@ const handleEditPatient = async (updatedPatient: Patient) => {
 
     setPatients(prev =>
       prev.map(p => p.id === data._id ? {
+        id: data._id,
         patientCode: data.patientCode,
         name: data.name,
         age: data.age,
@@ -409,11 +410,11 @@ const handleEditPatient = async (updatedPatient: Patient) => {
                 onClick={() => setCurrentPage('dashboard')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   currentPage === 'dashboard'
-                    ? 'bg-blue-50 text-blue-700'
+                    ? 'bg-blue-50 text-blue-700 font-semibold'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <LayoutDashboard className="w-5 h-5" />
+                <LayoutDashboard className={`w-5 h-5 ${ currentPage==='dashboard' ? 'stroke-[2.2]' : 'stroke-[1.7]'}`} />
                 Dashboard
               </button>
             </li>
@@ -422,11 +423,11 @@ const handleEditPatient = async (updatedPatient: Patient) => {
                 onClick={() => setCurrentPage('patients')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   currentPage === 'patients' || currentPage === 'patient-detail'
-                    ? 'bg-blue-50 text-blue-700'
+                    ? 'bg-blue-50 text-blue-700 font-semibold'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <Users className="w-5 h-5" />
+                <Users className={`w-5 h-5 ${ currentPage === 'patients' || currentPage === 'patient-detail' ? 'stroke-[2.2]' : 'stroke-[1.7]'}`} />
                 Patient Database
               </button>
             </li>
@@ -435,11 +436,11 @@ const handleEditPatient = async (updatedPatient: Patient) => {
                 onClick={() => setCurrentPage('converter')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   currentPage === 'converter'
-                    ? 'bg-blue-50 text-blue-700'
+                    ? 'bg-blue-50 text-blue-700 font-semibold'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <Calculator className="w-5 h-5" />
+                <Calculator className={`w-5 h-5 ${ currentPage==='converter' ? 'stroke-[2.2]' : 'stroke-[1.7]'}`} />
                 Unit Converter
               </button>
             </li>
@@ -448,11 +449,11 @@ const handleEditPatient = async (updatedPatient: Patient) => {
                 onClick={() => setCurrentPage('readings')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   currentPage === 'readings'
-                    ? 'bg-blue-50 text-blue-700'
+                    ? 'bg-blue-50 text-blue-700 font-semibold'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <Activity className="w-5 h-5" />
+                <Activity className={`w-5 h-5 ${ currentPage==='readings' ? 'stroke-[2.2]' : 'stroke-[1.7]'}`} />
                 Readings
               </button>
             </li>
