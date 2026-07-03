@@ -2,12 +2,16 @@ import { useEffect, useState } from 'react';
 import { X, Plus, Save, Check, XCircle, User, Divide, XIcon, LucideTrash2, SaveIcon, Database } from 'lucide-react';
 import ReadingTable from './ReadingTable';
 import { Patient, AlgometerReading } from '../types/algometer';
+import { remove, ref } from 'firebase/database';
+import { db } from '../firebase'
+import api from '../services/api';
+// import { fetchSavedReadings } from '../components/SavedReadings';
+import { toast } from 'sonner';
 interface AlgometerReadingInterfaceProps {
-  onClose: () => void;
-  onSave: (reading: Omit<AlgometerReading, 'id' | 'timestamp'>) => void;
-  onCommit: (reading: Omit<AlgometerReading, 'id' | 'timestamp'>,
-    id?:string
-  ) => void;
+  onClose: () => Promise<void>;
+  onSave: ( reading: Omit<AlgometerReading, 'id' | 'timestamp'>, id?: string ) => void;
+  onCommit: ( reading: Omit<AlgometerReading, 'id' | 'timestamp'>, id?: string ) => void;
+  onRefreshSavedReadings: () => void;
   doctorName: string;
   existingReading?: AlgometerReading | null;
   availablePatients: Patient[];
@@ -30,6 +34,7 @@ export function AlgometerReadingInterface({
   onClose, 
   onSave,
   onCommit,
+  onRefreshSavedReadings,
   doctorName,
   existingReading,
   availablePatients,
@@ -39,6 +44,9 @@ export function AlgometerReadingInterface({
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     existingReading?.patientId || preSelectedPatientId || ''
   );
+
+    // To turn on and off listener we use session active state
+  const [sessionActive, setSessionActive] = useState(false);
 
   const [doctorNotes, setDoctorNotes] = useState(existingReading?.doctorNotes || '');
 
@@ -60,6 +68,18 @@ export function AlgometerReadingInterface({
   //     )
   //   }
   // }, [existingReading]);
+
+    //
+  const resetReadingSession = async () => {
+    setSessionReadings([]);
+    setSessionActive(false);
+    setDoctorNotes("");
+
+    await remove(
+      ref(db, "AlgometerReadings/Demo_Algometer_001/Readings")
+    );
+  };
+
   useEffect(() => {
 
   if (!existingReading) return;
@@ -71,6 +91,7 @@ export function AlgometerReadingInterface({
   }));
 
   setSessionReadings(convertedReadings);
+  setSessionActive(true)
 
 }, [existingReading]);
 
@@ -80,14 +101,54 @@ export function AlgometerReadingInterface({
     if (!date) return null;
     return new Date(date).toLocaleDateString("en-GB");
   };
+  
+  // const handleDeletePatient = async (patientId: string) => {
+  //   if (!confirm('Are you sure you want to delete this patient? This action cannot be undone.')) return;
 
-  const handleDiscard = () => {
-    if (confirm('Are you sure you want to discard all readings? This action cannot be undone.')) {
+  //   try {
+
+  //     await api.delete(`/patients/${patientId}`);
+
+  //     setPatients(prev => prev.filter(p => p.id !== patientId));
+
+  //     toast.success("Patient deleted successfully");
+
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error("Failed to delete patient");
+  //   }
+  // };
+
+  const handleDiscard = async () => {
+    try {
+      if (existingReading) {
+      // console.log(existingReading.id);
+        if (confirm('Are you sure you want to discard all readings and Note? This action cannot be undone.')) {
+
+            await api.delete(`/readings/${existingReading.id}`)
+            toast.success("Reading deleted successfully");
+            await resetReadingSession();
+
+        }
+
+        return;
+      }
+      if( confirm('Are you want to discard all readings?')){
+        await resetReadingSession();
+
+      }
+    } catch (error) {
+
+      console.error(error);
+      toast.error("Failed to delete reading");
+
+    } finally {
+      onRefreshSavedReadings();
       onClose();
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedPatientId) {
       alert('Please select a patient');
       return;
@@ -98,7 +159,24 @@ export function AlgometerReadingInterface({
       return;
     }
 
-    onSave({
+    // onSave({
+    //   patientId: selectedPatient!.id,
+    //   patientCode: selectedPatient!.patientCode,
+    //   patientName: selectedPatient!.name,
+
+    //   doctorName: doctorName,
+    //   doctorNotes: doctorNotes,
+
+    //   readings: sessionReadings.map(r => ({
+    //     muscleName: r.muscle,
+    //     threshold: r.pointPressureThreshold,
+    //     tolerance: r.pointPressureTolerance
+    //   })),
+
+    //   status: "saved"
+    // });
+
+    const payload: Omit<AlgometerReading, "id" | "timestamp"> = {
       patientId: selectedPatient!.id,
       patientCode: selectedPatient!.patientCode,
       patientName: selectedPatient!.name,
@@ -113,11 +191,21 @@ export function AlgometerReadingInterface({
       })),
 
       status: "saved"
-    });
+    };
+
+    if (existingReading) {
+      onSave(payload, existingReading?.id);
+    } else {
+      onSave(payload);
+    }
+
+    await resetReadingSession();
+    onRefreshSavedReadings();
+    onClose();
   };
 
   
-  const handleCommitToDB = () => {
+  const handleCommitToDB = async () => {
 
     if (!selectedPatientId) {
       alert('Please select a patient');
@@ -152,29 +240,32 @@ export function AlgometerReadingInterface({
     //   // sessionTime: new Date().toISOString()
     // });
 
-  const payload: Omit<AlgometerReading, "id" | "timestamp"> = {
-    patientId: selectedPatient!.id,
-    patientCode: selectedPatient!.patientCode,
-    patientName: selectedPatient!.name,
+    const payload: Omit<AlgometerReading, "id" | "timestamp"> = {
+      patientId: selectedPatient!.id,
+      patientCode: selectedPatient!.patientCode,
+      patientName: selectedPatient!.name,
 
-    doctorName: doctorName,
-    doctorNotes: doctorNotes,
+      doctorName: doctorName,
+      doctorNotes: doctorNotes,
 
-    readings: sessionReadings.map(r => ({
-      muscleName: r.muscle,
-      threshold: r.pointPressureThreshold,
-      tolerance: r.pointPressureTolerance
-    })),
+      readings: sessionReadings.map(r => ({
+        muscleName: r.muscle,
+        threshold: r.pointPressureThreshold,
+        tolerance: r.pointPressureTolerance
+      })),
 
-    status: "committed"
-  };
+      status: "committed"
+    };
 
-  if (existingReading) {
-    onCommit(payload, existingReading?.id );
-  } else {
-    onCommit(payload);
-  }
+    if (existingReading) {
+      onCommit(payload, existingReading?.id );
+    } else {
+      onCommit(payload);
+    }
 
+    await resetReadingSession();
+    onRefreshSavedReadings();
+    onClose();
   };
 
   return (
@@ -187,7 +278,7 @@ export function AlgometerReadingInterface({
             {/* <p className="text-gray-600 text-sm mt-1">Record pain pressure threshold measurements</p> */}
           </div>
           <button
-            onClick={onClose}
+            onClick={() => {onClose(); resetReadingSession();}}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <XIcon className="w-5 h-5 text-gray-700" />
@@ -197,16 +288,24 @@ export function AlgometerReadingInterface({
         <div className="flex-1 overflow-y-auto p-6">
           {/* Patient Selection */}
           <div className="mb-6">
-            <label className="block text-md font-medium text-gray-900 mb-2 ">
+            <label className="block text-base font-bold text-gray-900 mb-2 ">
               Select Patient <span className="text-red-500">*</span>
             </label>
             <select
               value={selectedPatientId}
-              onChange={(e) => setSelectedPatientId(e.target.value)}
+              onChange={(e) => {
+                  setSelectedPatientId(e.target.value)
+
+                  if (e.target.value) {
+                    setSessionActive(true)
+                  }
+                }
+              }
               className="w-full px-4 py-2 text-md font-normal 
                         border border-gray-300 rounded-lg 
                         shadow-sm p-3 bg-gray-50 
                         focus:outline-none focus:ring-1 focus:ring-blue-400
+                        capitalize
                         "
               disabled={!!existingReading?.patientId}
             >
@@ -237,7 +336,7 @@ export function AlgometerReadingInterface({
 
           {/* Patient Details */}
           {selectedPatient && (
-            <div className="mb-6 border border-gray-300 rounded-lg p-6">
+            <div className="mb-6 border border-gray-300 rounded-lg p-6 bg-gray-50 shadow-sm">
               <div className="flex items-start gap-6">
                 {/* Patient Photo */}
                 <div className="flex-shrink-0">
@@ -296,7 +395,7 @@ export function AlgometerReadingInterface({
 
           {/* Doctor's Notes */}
           <div className="mb-4">
-            <label className="block text-md font-medium text-gray-900 mb-2">Doctor's Notes</label>
+            <label className="block text-base font-bold text-gray-900 mb-2">Doctor's Notes</label>
             <textarea
               value={doctorNotes}
               onChange={(e) => setDoctorNotes(e.target.value)}
@@ -309,9 +408,10 @@ export function AlgometerReadingInterface({
           
           {/* Readings Table */}
           <div className="py-1 w-full mb-6">
-            <label className="block text-md font-medium text-gray-900 mb-2">Algometer Readings</label>
+            <label className="block text-base font-bold text-gray-900 mb-2">Algometer Readings</label>
             <ReadingTable rows={sessionReadings} 
-              onRowsChange={setSessionReadings}/>
+              onRowsChange={setSessionReadings}
+              sessionActive={sessionActive} />
           </div>
           
           {/* Reference Guide */}

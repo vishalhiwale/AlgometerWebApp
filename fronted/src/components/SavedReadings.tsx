@@ -1,34 +1,49 @@
-import { Activity, Calendar, User, FileText, ClipboardPlusIcon } from 'lucide-react';
+import { Activity, Calendar, User, FileText, ClipboardPlusIcon, StethoscopeIcon } from 'lucide-react';
 import { useEffect, useState } from "react"
 import { AlgometerReading } from '../types/algometer';
-
+import api from "../services/api";
 interface SavedReadingsProps {
+  refreshKey: number;
   onOpenReadingInterface: () => void;
   onEditReading: (reading: AlgometerReading) => void;
 }
   
   export function SavedReadings({ 
+    refreshKey,
     onOpenReadingInterface,
     onEditReading
   }: SavedReadingsProps) {
 
   const [savedReadings, setSavedReadings] = useState<AlgometerReading[]>([]);
 
+  const fetchSavedReadings = async () => {
+
+    try {
+
+      const response = await api.get("/readings/saved");
+      const data = Array.isArray(response.data) ? response.data : [];
+      const formatted = data.map((r: any) => ({
+        ...r,
+        id: r._id
+      }));
+
+      // console.log("Saved Readings: ",formatted);
+      setSavedReadings(formatted);
+
+    } catch (error) {
+
+      console.error("Failed to fetch saved readings: ",error);
+      setSavedReadings([]);
+
+    }
+
+  };
+
   useEffect(() => {
-    fetch("http://localhost:5000/api/readings/saved")
-      .then(res => res.json())
-      .then(data => {
-        const formatted = data.map((r: any) => ({
-          ...r,
-          id: r._id
-        }))
-
-        console.log("Saved readings:", formatted)
-
-        setSavedReadings(formatted)
-      })
-      .catch(err => console.error(err))
-  }, [])
+      
+    fetchSavedReadings();
+    
+  }, [refreshKey])
 
 
   const formatDate = (timestamp?: string) => {
@@ -64,7 +79,6 @@ interface SavedReadingsProps {
 
       {savedReadings.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-          {/* <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" /> */}
           <p className="text-gray-600 text-xl font-semibold">No saved readings</p>
           <p className="text-gray-500 text-base mt-1">Take new readings to see them here</p>
         </div>
@@ -74,67 +88,65 @@ interface SavedReadingsProps {
             <div
               key={reading.id}
               onClick={() => onEditReading(reading)}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all cursor-pointer hover:border-blue-300"
+              className="bg-white rounded-xl shadow-lg border border-gray-100 p-5 transition-all cursor-pointer hover:border-2 hover:border-blue-300 max-w-90"
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="text-gray-900">Reading #{reading.id}</p>
+                  <p className="text-gray-900 font-medium text-lg capitalize">{reading.patientName}</p>
                   <div className="flex items-center gap-1 text-gray-600 text-sm mt-1">
-                    <Calendar className="w-3 h-3" />
-                    {formatDate(reading.timestamp)}
                   </div>
                 </div>
-                <div className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs">
+                <div className="bg-amber-100 text-yellow-700 font-semibold border border-amber-200 px-2 py-1 rounded text-xs">
                   Saved
                 </div>
               </div>
 
-              {/* Patient Info */}
+              {/* Patient Info
               {reading.patientName && (
                 <div className="mb-4 bg-blue-50 border border-blue-200 p-3 rounded-lg">
                   <p className="text-gray-700 text-sm mb-1">Patient</p>
                   <p className="text-blue-900">{reading.patientName} ({reading.patientCode})</p>
                   <p className="text-blue-700 text-xs mt-1">{reading.patientId}</p>
                 </div>
-              )}
+              )} */}
 
               {/* Readings Taken */}
-              <div className="mb-4 bg-blue-50 p-3 rounded-lg">
-                <p className="text-gray-700 text-sm mb-2">Readings Taken</p>
+              <div className="mb-4 bg-blue-50 p-3 rounded-lg border border-blue-60 shadow-sm">
+                <p className="text-gray-700 text-base font-semibold mb-2">Readings</p>
                 <div className="space-y-1 max-h-32 overflow-y-auto">
                   {reading.readings.map((r, idx) => (
-                    <div key={idx} className="text-xs text-gray-700 bg-white px-2 py-1 rounded border border-blue-100">
-                      <span className="font-medium">{r.muscleName}:</span> 
-                      <span className="ml-1">
+                    <div key={idx} className="text-xs text-gray-700 bg-white px-2 py-1 rounded-md border border-blue-100 shadow-sm">
+                      <span className="font-medium text-sm">{r.muscleName} :</span> 
+                      <span className="ml-2 font-medium">
                         PPT: {r.threshold !== null ? `${r.threshold} kPa` : 'N/A'}, 
                         PPTol: {r.tolerance !== null ? `${r.tolerance} kPa` : 'N/A'}
                       </span>
                     </div>
                   ))}
                 </div>
-                <p className="text-blue-900 text-sm mt-2">{reading.readings.length} locations measured</p>
+                <p className="text-blue-900 font-medium text-sm mt-2">{reading.readings.length} Muscle measured</p>
               </div>
 
               {/* Doctor Info */}
-              <div className="mb-4 flex items-center gap-2 text-gray-600 text-sm">
-                <User className="w-4 h-4" />
+              <div className="mb-2 flex items-center gap-2 text-gray-600 text-base font-medium">
+                <StethoscopeIcon className="w-4 h-4" />
                 <span>Taken by: {reading.doctorName}</span>
               </div>
 
               {/* Doctor Notes Preview */}
               {reading.doctorNotes && (
-                <div className="mb-4">
-                  <div className="flex items-center gap-1 text-gray-700 text-sm mb-1">
-                    <FileText className="w-3 h-3" />
-                    Notes
+                <div className="mb-2">
+                  <div className="mb-1 flex items-center gap-2 text-gray-600 text-base font-medium">
+                    <FileText className="w-4 h-4" />
+                    <span> Notes</span>
                   </div>
-                  <p className="text-gray-600 text-sm line-clamp-2">{reading.doctorNotes}</p>
+                  <p className="text-gray-600 text-base line-clamp-2">{reading.doctorNotes}</p>
                 </div>
               )}
 
               {/* Click to Edit Hint */}
-              <div className="text-center text-xs text-gray-500 mt-4 pt-3 border-t border-gray-200">
+              <div className="text-center text-sm text-gray-500 mt-4 pt-3 border-t border-gray-200 hover:underline hover:text-blue-500">
                 Click to edit or commit to database
               </div>
             </div>

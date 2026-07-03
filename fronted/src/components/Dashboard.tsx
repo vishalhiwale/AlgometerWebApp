@@ -1,18 +1,68 @@
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Users, Calendar, TrendingUp, Activity } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import api from "../services/api";
 
 export function Dashboard() {
 
   const [patients, setPatients] = useState<any[]>([]);
+  const [readings, setReadings] = useState<any[]>([]);
+  const [pieChartType, setPieChartType] = useState("status");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/patients")
-      .then(res => res.json())
-      .then(data => {
-        setPatients(data);
-      })
-      .catch(err => console.error(err));
+
+    const fetchPatients = async () => {
+
+      try {
+
+        const response = await api.get("/patients");
+
+        if(Array.isArray(response.data)){
+          setPatients(response.data)
+        }
+        else{
+          setPatients([]);
+        }
+
+      } catch (error) {
+        
+        console.error(error);
+        setPatients([]);
+
+      };
+
+    }
+
+    fetchPatients();
+    
+  }, []);
+
+  useEffect(() => {
+
+    const fetchReadings = async () => {
+
+      try {
+
+        const readings = await api.get("/readings/readings");
+
+        if(Array.isArray(readings.data)){
+          setReadings(readings.data);
+        }
+        else{
+          setReadings([]);
+        }
+        // console.log("fetched readings:", readings.data);
+      } catch (error) {
+        
+        console.error(error);
+        setReadings([]);
+
+      };
+
+    }
+
+    fetchReadings();
+    
   }, []);
 
   // Calculate statistics
@@ -56,24 +106,7 @@ export function Dashboard() {
     }));
   };
 
-  // Pain threshold trends
-  // const weeklyTrends = [
-  //   { day: 'Mon', avgPain: 4.2, patients: 8 },
-  //   { day: 'Tue', avgPain: 3.8, patients: 12 },
-  //   { day: 'Wed', avgPain: 4.5, patients: 10 },
-  //   { day: 'Thu', avgPain: 3.9, patients: 15 },
-  //   { day: 'Fri', avgPain: 4.1, patients: 11 },
-  //   { day: 'Sat', avgPain: 3.5, patients: 6 },
-  //   { day: 'Sun', avgPain: 3.2, patients: 4 },
-  // ];
   const weeklyTrends = getWeeklyVisits();
-
-  // Patient distribution by pain level
-  const painDistribution = [
-    { name: 'Low (0-3)', value: 12, color: '#10b981' },
-    { name: 'Moderate (3-6)', value: 25, color: '#f59e0b' },
-    { name: 'High (6-10)', value: 8, color: '#ef4444' },
-  ];
 
   // Recent measurements
   const recentMeasurements = [
@@ -119,6 +152,170 @@ export function Dashboard() {
     },
   ];
   
+  type PieStat = {
+    label: string;
+    value: number;
+    color: string;
+  }
+
+  // To get Stauts count (Saved readings, Committed readings)
+  const getStatusStats = (): PieStat[] => {
+
+    const statusCount: Record<string, number> = {};
+
+    readings.forEach(reading => {
+
+      const status = reading.status || "Unknown";
+
+      statusCount[status] = (statusCount[status] || 0) + 1;
+
+    });
+
+    const colors = {
+      saved: "#FFBF00",
+      committed: "#10b981"
+    }
+
+    // console.log("status count:", statusCount);
+    return Object.entries(statusCount).map(([label, value]) => ({
+      label,
+      value,
+      color: colors[label as keyof typeof colors] || "#9ca3af",
+    }));
+
+  };
+
+  // To get Gender count (Male, Female, Other, Unknown)
+  const getGenderStats = (): PieStat[] => {
+
+    const genderCount: Record<string, number> = {};
+
+    patients.forEach(patient => {
+
+      const gender = patient.gender || "Unknown";
+
+      genderCount[gender] = (genderCount[gender] || 0) + 1;
+
+    });
+
+    const colors = {
+      Male: "#3b82f6",
+      Female: "#e375ac",
+      Other: "#8b5cf6",
+      Unknown: "#9ca3af"
+    };
+
+    // console.log("gender count", genderCount);
+
+    return Object.entries(genderCount).map(([label, value]) => ({
+      label,
+      value,
+      color: colors[label as keyof typeof colors] || "#9ca3af",
+    }));
+
+  };
+
+  // To get Muscle Disctribution count (Forehead, Cheek, Chin, Masseter, Unknown)
+  const getMuscleStats = (): PieStat[] => {
+
+    const muscleCount: Record<string, number> = {};
+
+    readings.forEach(reading => {
+
+      reading.readings.forEach((muscle: any) => {
+        muscleCount[muscle.muscleName] = (muscleCount[muscle.muscleName] || 0) + 1;
+      });
+
+    });
+
+    const colors = [
+      "#3b82f6",
+      "#10b981",
+      "#f59e0b",
+      "#ef4444",
+      "#9ca3af",
+      "#8b5cf6",
+      "#06b6d4",
+      "#ec4899"
+    ]
+
+    // console.log("muscle count", muscleCount);
+
+    return Object.entries(muscleCount).map(([label, value], index) => ({
+      label,
+      value,
+      color: colors[index % colors.length] || "#9ca3af",
+    }));
+
+  };
+
+
+  const getSeverityStats = (): PieStat[] => {
+
+    const severityCount: Record<string, number> = {};
+
+    readings.forEach(reading => {
+
+      reading.readings.forEach((muscle: any) => {
+        if (muscle.threshold < 150)
+          severityCount["Severe"] = (severityCount["Severe"] || 0) + 1;
+
+        else if (muscle.threshold < 250)
+          severityCount["Moderate"] = (severityCount["Moderate"] || 0) + 1;
+
+        else if (muscle.threshold < 300)
+          severityCount["Mild"] = (severityCount["Mild"] || 0) + 1;
+
+        else
+          severityCount["Normal"] = (severityCount["Normal"] || 0) + 1;
+      });
+
+    });
+
+    const colors = {
+      Severe: "#ef4444",
+      Moderate: "#f59e0b",
+      Mild: "#10b981",
+      Normal: "#3b82f6"
+    };
+
+    return Object.entries(severityCount).map(([label, value]) => ({
+      label,
+      value,
+      color: colors[label as keyof typeof colors] || "#9ca3af",
+    }));
+
+  };
+    // const pieStats: PieStat[] = [
+  //   { label: "Saved Readings", value: 3, color: '#FFBF00' },
+  //   { label: "Committed Readings", value: 10, color: "#10b981" }
+  //   // { label: "Saved Readings", value: savedReadings.length, color: '#FFBF00' },
+  //   // { label: "Committed Readings", value: committedReadings.length, color: "#10b981" }
+  // ];
+
+  // const pieStats: PieStat[] = getStatusStats();
+  const pieStats: PieStat[] = useMemo(() => {
+    switch (pieChartType) {
+      case "status":
+        return getStatusStats();
+
+      case "gender":
+        return getGenderStats();
+
+      case "severity":
+        // Implement getSeverityStats() if needed
+        return getSeverityStats();
+      
+      case "muscle":
+        // Implement getMuscleStats() if needed
+        return getMuscleStats();
+
+      default:
+        // default return getStatusStats();
+        return getStatusStats();
+    }
+  }, [pieChartType, readings]);
+  
   const colorMap = {
     blue: "bg-blue-50 text-blue-600",
     green: "bg-green-50 text-green-600",
@@ -133,56 +330,6 @@ export function Dashboard() {
         {/* <p className="text-gray-600 mt-1">Real-time analytics and patient statistics</p> */}
       </div>
 
-      {/* Stats Cards */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="px-2 py-2 rounded-lg text-sm font-medium">Total Patients</p>
-              <p className="text-center text-sm font-medium">{totalPatients}</p>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <Users className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="px-2 py-2 rounded-lg text-sm font-medium">Today's Appointments</p>
-              <p className="text-center text-sm font-medium">{todayAppointments}</p>
-            </div>
-            <div className="bg-green-50 p-3 rounded-lg">
-              <Calendar className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="px-2 py-2 rounded-lg text-sm font-medium">Upcoming (7 days)</p>
-              <p className="text-center text-sm font-medium">{upcomingWeek}</p>
-            </div>
-            <div className="bg-orange-50 p-3 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-orange-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="px-2 py-2 rounded-lg text-sm font-medium">Avg Pain Threshold</p>
-              <p className="text-center text-sm font-medium">28.5 N/cm²</p>
-            </div>
-            <div className="bg-purple-50 p-3 rounded-lg">
-              <Activity className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
-      </div> */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
@@ -213,31 +360,51 @@ export function Dashboard() {
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
         {/* Weekly Patient Trends */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-gray-900 mb-4">Weekly Patient Visits</h3>
+          <h3 className="text-gray-900 text-lg font-semibold mb-4">Weekly Patient Visits</h3>
           {weeklyTrends.length === 0 ? (
-            <p className='text-gray-500'>No visit data available</p>
+            <div className='no-data-placeholder'>
+              <p className='text-gray-500 text-center py-30'>No visit data available</p>
+            </div>
             ) : (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={weeklyTrends}>
+              <BarChart 
+                data={weeklyTrends}
+                margin={{ top: 10, right: 0, left: -40, bottom: -10 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" opacity={0.5}/>
                 <XAxis
-                  dataKey="day"
-                  tick={{ fontSize: 12 }}
+                  dataKey={"day"}
+                  tick={false}
+                  // tick={{ fontSize: 12 }}
                 />
                 <YAxis
+                  // dataKey={"null"}
+                  tick={false}
                   allowDecimals={false}
                 />
                 <Tooltip 
                   formatter={(value) => [`${value} patients`, "Visits"]}
-                  labelFormatter={(label) => `Date: ${label}`}
+                  labelFormatter={(label) => `Day : ${label}`}
+                  wrapperStyle={{ width: 140, height: 60 }} 
+                  contentStyle={{ 
+                    fontSize: '14px',
+                    textAlign: 'left',
+                    textSizeAdjust : '10px sans-serif',
+                    backgroundColor: '#fff', 
+                    borderRadius: '8px', 
+                    border: '1px solid #ccc',
+                    fontFamily: 'sans-serif' 
+                  }}
+                  itemStyle={{ color: '#333', fontWeight: 'bold' }}
                 />
-                <Legend
+                {/* <Legend
                     formatter={(value) => (
                       <span style={{ color: '#3b82f6' }}>{value}</span>
                     )}
-                />
+                /> */}
                 <Bar dataKey="patients" name="Patients" animationDuration={800}>
                   {weeklyTrends.map((entry, index) => (
                     <Cell
@@ -253,31 +420,72 @@ export function Dashboard() {
 
         {/* Pain Distribution */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-gray-900 mb-4">Pain Level Distribution</h3>
+          <div className='flex justify-between items-center mb-4'>
+            <h3 className="text-gray-900 text-lg font-semibold">
+              {pieChartType === "status" && "Reading Status Distribution"}
+              {pieChartType === "gender" && "Gender Distribution"}
+              {pieChartType === "severity" && "Pain Severity Distribution"}
+              {pieChartType === "muscle" && "Muscle Distribution"}
+            </h3>
+
+            <select
+              value={pieChartType}
+              onChange={(e) => setPieChartType(e.target.value)}
+              className="border border-gray-600 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="status">Reading Status</option>
+              <option value="gender">Gender</option>
+              <option value="severity">Pain Severity</option>
+              <option value="muscle">Muscle Distribution</option>
+            </select>
+          </div> 
+
           <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={painDistribution}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, value }) => `${name}: ${value}`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {painDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
+            {pieStats.length === 0 ? (
+              <div className='no-data-placeholder'>
+                <p className='text-gray-500 text-center py-30'>No {pieChartType} data available</p>
+              </div>
+            ) : (
+              <PieChart>
+                <Tooltip 
+                  formatter={(value: number) => [value, ""]} 
+                  separator="" 
+                  wrapperStyle={{ width: 50, height: 60 }}                  
+                  contentStyle={{ 
+                    // width: '50px',
+                    fontSize: '14px',
+                    textAlign: 'center',
+                    backgroundColor: '#fff', 
+                    borderRadius: '8px', 
+                    border: '1px solid #ccc',
+                    fontFamily: 'sans-serif' 
+                  }}
+                  itemStyle={{ color: '#333', fontWeight: 'bold' }}
+                />
+                <Pie
+                  data={pieStats.filter((item) => item.value > 0)}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ label, value ,}) => `${label}`}
+                  fontWeight={'500'}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="label"
+                >
+                  {pieStats.filter((item) => item.value > 0).map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+              </PieChart>
+            )}
           </ResponsiveContainer>
         </div>
 
         {/* Recent Measurements Trend */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
-          <h3 className="text-gray-900 mb-4">Recent Algometer Measurements (N/cm²)</h3>
+          <h3 className="text-gray-900 text-lg font-semibold mb-4">Recent Algometer Measurements (N/cm²)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={recentMeasurements}>
               <CartesianGrid strokeDasharray="3 3" />

@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from "react";
-import { ref, onChildAdded, off } from "firebase/database";
+import React, { useEffect, useState, useRef } from "react";
+import { ref, onChildAdded } from "firebase/database";
 import { db } from "../firebase";
 
 interface FirebaseReading {
@@ -10,29 +10,41 @@ interface FirebaseReading {
 
 interface Props {
   rows: FirebaseReading[]
-  onRowsChange: (rows: FirebaseReading[]) => void;
+  // onRowsChange: (rows: FirebaseReading[]) => void;
+  onRowsChange: React.Dispatch<React.SetStateAction<FirebaseReading[]>>;
+  sessionActive: boolean;
 }
 
-function ReadingTable({rows: initialRows, onRowsChange} : Props) {
+function ReadingTable({
+  rows, 
+  onRowsChange,
+  sessionActive
+} : Props) {
 
-  const [rows, setRows] = useState<FirebaseReading[]>(initialRows || []);
+  // const [rows, setRows] = useState<FirebaseReading[]>(initialRows || []);
 
-  useEffect(() => {
-    setRows(initialRows || []);
-  }, [initialRows]);
+  // useEffect(() => {
+  //   setRows(initialRows || []);
+  // }, [initialRows]);
 
   // send rows to parent AFTER state updates
-  useEffect(() => {
-    onRowsChange(rows);
-  }, [rows])
+  // useEffect(() => {
+  //   onRowsChange(rows);
+  // }, [rows])
 
   // Track processed Firebase keys
   const seenKeys = useRef<Set<string>>(new Set())
 
   useEffect(() => {
-    const readingsRef = ref(db, "liveReadings/algometer");
+
+    if (!sessionActive) {
+      return;
+    }
+
+    const readingsRef = ref(db, "AlgometerReadings/Demo_Algometer_001/Readings");
 
     const listener = onChildAdded(readingsRef, (snapshot) => {
+
       const key = snapshot.key;
 
       if(!key || seenKeys.current.has(key)) return;
@@ -41,12 +53,24 @@ function ReadingTable({rows: initialRows, onRowsChange} : Props) {
 
       const newReading = snapshot.val() as FirebaseReading;
 
-      setRows(prev => [...prev, newReading]);
+      onRowsChange(prev => [...prev, newReading]);
 
     });
 
-    return () => listener();
-  }, []);
+    return () => {
+      listener();
+    }
+  }, [sessionActive, onRowsChange]);
+
+  // To clear seen keys
+  useEffect(() => {
+    
+    if(!sessionActive) {
+      seenKeys.current.clear();
+    }
+
+  }, [sessionActive]);
+
 
   if (rows.length === 0) {
     return (
@@ -58,24 +82,26 @@ function ReadingTable({rows: initialRows, onRowsChange} : Props) {
   }
 
   return (
-    <table className="border border-gray-300 w-full border-collapse text-center">
-      <thead>
-        <tr>
-          <th className="border">Muscle (Type)</th>
-          <th className="border">Point Pressure Threshold</th>
-          <th className="border">Point Pressure Tolerance</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r, index) => (
-          <tr key={r.muscle + index}>
-            <td className="border">{r.muscle}</td>
-            <td className="border">{r.pointPressureThreshold} kPa</td>
-            <td className="border">{r.pointPressureTolerance} kPa</td>
+    <div className="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden">
+      <table className="w-full text-center ">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-5 py-3 text-center text-base font-semibold border">Muscle (Type)</th>
+            <th className="px-5 py-3 text-center text-base font-semibold border">Point Pressure Threshold</th>
+            <th className="px-5 py-3 text-center text-base font-semibold border">Point Pressure Tolerance</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
+          {rows.map((r, index) => (
+            <tr key={r.muscle + index}>
+              <td className="border py-1.5 ">{r.muscle}</td>
+              <td className="border py-1.5 ">{r.pointPressureThreshold} kPa</td>
+              <td className="border py-1.5 ">{r.pointPressureTolerance} kPa</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

@@ -4,6 +4,7 @@ import cors from "cors";
 import connectDB from "./config/db";
 import patientRoutes from "./routes/patientRoutes";
 import readingRoutes from "./routes/readingRoutes";
+import authRoutes from "./routes/authRoutes"
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/patients", patientRoutes);
 app.use("/api/readings", readingRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend API Running");

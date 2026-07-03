@@ -364,24 +364,36 @@ export function PatientDetail({
                 <ResponsiveContainer width="100%" height={400}>
                   <LineChart 
                     data={progressionData}
-                    margin={{ top:20, right: 20, left:10, bottom:40 }}
+                    margin={{ top:20, right: 20, left:30, bottom:40 }}
                   >
                     <CartesianGrid 
                       strokeDasharray="3 3" stroke="#e5e7eb"
                     />
                     <XAxis 
-                      label={{ value: 'Time', position: 'insideBottom', offset: -25}}
-                      dataKey="date" tick={{ fontSize: 12}}
+                      label={{ value: 'Time', position: 'insideBottom', offset: -25, fontSize: 16}}
+                      dataKey="date" 
+                      tick={{ fontSize: 12}}
+                      padding={{ left: 30, right: 0}} 
                     />
                     <YAxis 
-                      label={{ value: 'Pressure', angle: -90, position: 'insideLeft' }} 
+                      label={{ value: 'Pressure', angle: -90, position: 'insideLeft', fontSize: 16, offset: -5 }} 
                       tick={{ fontSize: 12 }}
                     />
                     <Tooltip 
-                      contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
-                      labelStyle={{ fontWeight: 'bold' }}
+                      // contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                      contentStyle={{ 
+                        fontSize: '14px',
+                        textAlign: 'left',
+                        textSizeAdjust : '10px sans-serif',
+                        backgroundColor: '#fff', 
+                        borderRadius: '8px', 
+                        border: '1px solid #ccc',
+                        fontFamily: 'sans-serif' 
+                      }}                      
+                      itemStyle={{ fontWeight: 400 }}
+                      labelStyle={{ fontWeight: 600 }}
                       formatter={(value, name) => [`${value} kPa`, name]}
-                      cursor={{ stroke: '#9ca3af', strokeWidth: 1}}
+                      cursor={{ stroke: '#9ca3af', strokeWidth: 1 }}
                     />
                     {/* <Legend 
                       wrapperStyle={{ fontSize: '12px'}}
@@ -399,26 +411,27 @@ export function PatientDetail({
                       return (
                         <React.Fragment key={muscleName}>
                           <Line 
-                            key={`${muscleName}_PPT`}
-                            type="monotone" 
-                            dataKey={`${muscleName}_PPT`} 
-                            stroke={color} 
-                            name={`${muscleName} (T)`}
-                            strokeWidth={3}
-                            dot={{ r: 4, strokeWidth: 2 }}
-                            activeDot={{ r: 6 }}
-                            connectNulls
-                          />
-                          <Line 
                             key={`${muscleName}_PPTol`}
                             type="monotone" 
                             dataKey={`${muscleName}_PPTol`} 
                             stroke={color} 
                             strokeDasharray="6 2"
-                            strokeWidth={3}
+                            strokeWidth={2}
                             opacity={0.7}
                             name={`${muscleName} (Tol)`}
-                            dot={{ r: 4, strokeWidth: 2 }}
+                            dot={{ r: 3, strokeWidth: 2, fill: '#fff' }}
+                            activeDot={{ r : 5, stroke: color, strokeDasharray:"6 3", strokeWidth: 2, fill: '#fff'}}
+                            connectNulls
+                          />                          
+                          <Line 
+                            key={`${muscleName}_PPT`}
+                            type="monotone" 
+                            dataKey={`${muscleName}_PPT`} 
+                            stroke={color} 
+                            name={`${muscleName} (T)`}
+                            strokeWidth={2}
+                            dot={{ r: 3, stroke: color, strokeWidth: 1, fill: true ? color:'#fff' }}
+                            activeDot={{ r: 4, stroke: color, strokeWidth: 2 }}
                             connectNulls
                           />
                         </React.Fragment>

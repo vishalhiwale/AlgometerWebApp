@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, {Schema} from "mongoose";
 
 const muscleSchema = new mongoose.Schema({
   muscleName: {
@@ -21,10 +21,22 @@ const muscleSchema = new mongoose.Schema({
 
 const readingSchema = new mongoose.Schema(
 {
-  patientId: {
-    type: String,
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
     required: true
   },
+
+  // patientId: {
+  //   type: String,
+  //   required: true
+  // }, Old Logic
+
+  patientId: {
+    type: Schema.Types.ObjectId,
+    ref: "Patient",
+    required: true
+  }, // New Logic
 
   patientCode: {
     type: String,
