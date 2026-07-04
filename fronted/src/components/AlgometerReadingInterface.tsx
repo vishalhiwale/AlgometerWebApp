@@ -12,6 +12,7 @@ interface AlgometerReadingInterfaceProps {
   onSave: ( reading: Omit<AlgometerReading, 'id' | 'timestamp'>, id?: string ) => void;
   onCommit: ( reading: Omit<AlgometerReading, 'id' | 'timestamp'>, id?: string ) => void;
   onRefreshSavedReadings: () => void;
+  onFetchReading: (patientId: string) => void;
   doctorName: string;
   existingReading?: AlgometerReading | null;
   availablePatients: Patient[];
@@ -35,6 +36,7 @@ export function AlgometerReadingInterface({
   onSave,
   onCommit,
   onRefreshSavedReadings,
+  onFetchReading,
   doctorName,
   existingReading,
   availablePatients,
@@ -82,18 +84,25 @@ export function AlgometerReadingInterface({
 
   useEffect(() => {
 
-  if (!existingReading) return;
+    // Existing readings are available then convert them and set session active
+    if (existingReading){
+      const convertedReadings = existingReading.readings.map((r) => ({
+        muscle: r.muscleName,
+        pointPressureThreshold: r.threshold,
+        pointPressureTolerance: r.tolerance
+      }));
+      
+      setSessionReadings(convertedReadings);
+      setSessionActive(true);
+    }
 
-  const convertedReadings = existingReading.readings.map((r) => ({
-    muscle: r.muscleName,
-    pointPressureThreshold: r.threshold,
-    pointPressureTolerance: r.tolerance
-  }));
+    // If Patient is already selected then set session Active
+    if(preSelectedPatientId){
+      setSessionActive(true)
+    }
+  
 
-  setSessionReadings(convertedReadings);
-  setSessionActive(true)
-
-}, [existingReading]);
+  }, [existingReading]);
 
   const selectedPatient = allPatients.find(p => p.id === selectedPatientId);
   
@@ -266,6 +275,7 @@ export function AlgometerReadingInterface({
     await resetReadingSession();
     onRefreshSavedReadings();
     onClose();
+    onFetchReading(selectedPatient.id);
   };
 
   return (

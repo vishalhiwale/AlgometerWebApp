@@ -453,7 +453,7 @@ export function PatientDetail({
             <div className="w-full overflow-x-auto">
               <div 
                 className="min-w-[900px]"
-                style={{ width: `${Math.max(progressionData.length * 80, 600)}px` }}
+                style={{ width : `${Math.max(progressionData.length * 80, 100)}px` }}
               >
                 <ResponsiveContainer width="100%" height={400}>
                   <LineChart 
@@ -467,7 +467,10 @@ export function PatientDetail({
                       label={{ value: 'Time', position: 'insideBottom', offset: -25, fontSize: 16}}
                       dataKey="date" 
                       tick={{ fontSize: 12}}
-                      padding={{ left: 30, right: 0}} 
+                      // padding={{ left: 15, right:0}} 
+                      alignmentBaseline="middle"
+                      padding={{ left:20, right: 0}}
+
                     />
                     <YAxis 
                       label={{ value: 'Pressure', angle: -90, position: 'insideLeft', fontSize: 16, offset: -5 }} 

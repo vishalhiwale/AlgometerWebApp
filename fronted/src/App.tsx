@@ -630,6 +630,7 @@ export default function App() {
           onRefreshSavedReadings={()=>
             setSavedReadingsRefreshKey(prev => prev+1)
           }
+          onFetchReading={fetchReadings}
           doctorName={user?.name ?? ""}
           existingReading={editingReading}
           availablePatients={patientsWithoutReadings}
