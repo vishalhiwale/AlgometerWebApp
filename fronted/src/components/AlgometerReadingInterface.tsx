@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { X, Plus, Save, Check, XCircle, User, Divide, XIcon, LucideTrash2, SaveIcon, Database } from 'lucide-react';
+import { X, Plus, Save, Check, XCircle, User, Divide, XIcon, LucideTrash2, SaveIcon, Database, UserCircle2Icon } from 'lucide-react';
 import ReadingTable from './ReadingTable';
 import { Patient, AlgometerReading } from '../types/algometer';
 import { remove, ref } from 'firebase/database';
@@ -269,8 +269,9 @@ export function AlgometerReadingInterface({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full my-8 flex flex-col max-h-[95vh]">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 ">
+
+      <div className="bg-gray-100 rounded-xl shadow-xl max-w-3xl w-full my-8 flex flex-col max-h-[95vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
@@ -279,114 +280,114 @@ export function AlgometerReadingInterface({
           </div>
           <button
             onClick={() => {onClose(); resetReadingSession();}}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-3 hover:bg-gray-200 rounded-lg transition-colors"
           >
             <XIcon className="w-5 h-5 text-gray-700" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
-          {/* Patient Selection */}
-          <div className="mb-6">
-            <label className="block text-base font-bold text-gray-900 mb-2 ">
-              Select Patient <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={selectedPatientId}
-              onChange={(e) => {
-                  setSelectedPatientId(e.target.value)
+        <div className="flex-1 p-6 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          
+          {/* Patient Selection & Photo*/}
+          <div className="mb-4 flex items-start justify-between gap-6">
 
-                  if (e.target.value) {
-                    setSessionActive(true)
+            {/* Patient Selection */}
+            <div className="flex-1 mr-6">
+              <label className="block text-base font-semibold text-gray-900 mb-2 ">
+                Select Patient <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedPatientId}
+                onChange={(e) => {
+                    setSelectedPatientId(e.target.value)
+
+                    if (e.target.value) {
+                      setSessionActive(true)
+                    }
                   }
                 }
-              }
-              className="w-full px-4 py-2 text-md font-normal 
-                        border border-gray-300 rounded-lg 
-                        shadow-sm p-3 bg-gray-50 
-                        focus:outline-none focus:ring-1 focus:ring-blue-400
-                        capitalize
-                        "
-              disabled={!!existingReading?.patientId}
-            >
-              <option value="">Select Patient</option>
-              
-              {(existingReading?.patientId ? allPatients : availablePatients).map(patient => (
-                <option key={patient.id} value={patient.id} className='focus: font-semibold'>
-                  {patient.name} 
-                  {/* ({patient.patientCode}) To show Patient code along name */}
-                </option>
-              ))}
-            </select>
+                className="w-full px-4 py-2 text-md font-normal 
+                          border border-gray-300 rounded-lg 
+                          shadow-sm p-3 bg-gray-50 
+                          focus:outline-none focus:ring-1 focus:ring-blue-400
+                          capitalize
+                          "
+                disabled={!!existingReading?.patientId}
+              >
+                <option value="">Select Patient</option>
+                
+                {(existingReading?.patientId ? allPatients : availablePatients).map(patient => (
+                  <option key={patient.id} value={patient.id} className='focus: font-semibold'>
+                    {patient.name} 
+                    {/* ({patient.patientCode}) To show Patient code along name */}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            {/* New Select option */}
-                      {/* <select
-            value={selectedPatientId}
-            onChange={(e) => setSelectedPatientId(e.target.value)}
-          >
-            <option value="">-- Select a Patient --</option>
+            {/* Patient Photo */}
+            {selectedPatient && (
+              <div className="flex-shrink-0 mr-10">
+                {selectedPatient.photo ? (
+                  <img 
+                    src={selectedPatient.photo} 
+                    alt={selectedPatient.name}
+                    className="w-24 h-24 rounded-full object-cover 
+                              border-2 border-white shadow-md rounded-lg p-3 bg-gray-50"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-blue-200 border-2 border-white shadow-lg flex items-center justify-center">
+                    <UserCircle2Icon strokeWidth={0.8} color='rgba(0, 81, 255, 0.83)' className="w-24 h-24 text-blue-600" />
+                  </div>
+                )}
+              </div>            
+            )}
 
-            {(existingReading?.patientId ? allPatients : availablePatients).map(patient => (
-              <option key={patient.id} value={patient.id}>
-                {patient.name} ({patient.patientCode})
-              </option>
-            ))}
-          </select> */}
           </div>
 
           {/* Patient Details */}
           {selectedPatient && (
-            <div className="mb-6 border border-gray-300 rounded-lg p-6 bg-gray-50 shadow-sm">
-              <div className="flex items-start gap-6">
-                {/* Patient Photo */}
-                <div className="flex-shrink-0">
-                  {selectedPatient.photo ? (
-                    <img 
-                      src={selectedPatient.photo} 
-                      alt={selectedPatient.name}
-                      className="w-24 h-24 rounded-full object-cover 
-                                border-4 border-white shadow-md rounded-lg p-3 bg-gray-50"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-blue-200 border-4 border-white shadow-lg flex items-center justify-center">
-                      <User className="w-12 h-12 text-blue-600" />
-                    </div>
-                  )}
-                </div>
+            <div>
+              <label className="block text-base font-semibold text-gray-900 mb-2 ">
+                Patient Details
+              </label>
 
-                {/* Patient Info */}
-                <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Patient ID</p>
-                    <p className="text-gray-900 text-md">{selectedPatient.patientCode}</p> {/*old : patientId*/}
-                  </div>
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Patient Name</p>
-                    <p className="text-gray-900 text-md">{selectedPatient.name}</p>
-                  </div>
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Age / Gender</p>
-                    <p className="text-gray-900 text-md">{selectedPatient.age} / {selectedPatient.gender}</p>
-                  </div>
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Contact</p>
-                    <p className="text-gray-900 text-md">{selectedPatient.contact}</p>
-                  </div>
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Last Visit</p>
-                    <p className="text-gray-900 text-md">{formatDate(selectedPatient.lastVisitDate)}</p>
-                  </div>
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Next Visit</p>
-                    <p className="text-gray-900 text-md">{formatDate(selectedPatient.nextCheckupDate)?? 'Not scheduled'}</p>
-                  </div>
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Status</p>
-                    <p className="text-gray-900 text-md">{selectedPatient.status || 'Active'}</p>
-                  </div>
-                  <div className="md:col-span-4 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Diagnosis</p>
-                    <p className="text-gray-900 text-md">{selectedPatient.diagnosis}</p>
+              <div className="mb-6 border border-gray-300 rounded-lg p-6 bg-gray-50 shadow-sm">    
+                <div className="flex items-start gap-6">
+                  {/* Patient Info */}
+                  <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Patient ID</p>
+                      <p className="text-gray-900 text-md">{selectedPatient.patientCode}</p> {/*old : patientId*/}
+                    </div>
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Patient Name</p>
+                      <p className="text-gray-900 text-md">{selectedPatient.name}</p>
+                    </div>
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Age / Gender</p>
+                      <p className="text-gray-900 text-md">{selectedPatient.age} / {selectedPatient.gender}</p>
+                    </div>
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Contact</p>
+                      <p className="text-gray-900 text-md">{selectedPatient.contact}</p>
+                    </div>
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Last Visit</p>
+                      <p className="text-gray-900 text-md">{formatDate(selectedPatient.lastVisitDate)}</p>
+                    </div>
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Next Visit</p>
+                      <p className="text-gray-900 text-md">{formatDate(selectedPatient.nextCheckupDate)?? 'Not scheduled'}</p>
+                    </div>
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Status</p>
+                      <p className="text-gray-900 text-md">{selectedPatient.status || 'Active'}</p>
+                    </div>
+                    <div className="md:col-span-4 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Diagnosis</p>
+                      <p className="text-gray-900 text-md">{selectedPatient.diagnosis}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -395,7 +396,7 @@ export function AlgometerReadingInterface({
 
           {/* Doctor's Notes */}
           <div className="mb-4">
-            <label className="block text-base font-bold text-gray-900 mb-2">Doctor's Notes</label>
+            <label className="block text-base font-semibold text-gray-900 mb-2">Doctor's Notes</label>
             <textarea
               value={doctorNotes}
               onChange={(e) => setDoctorNotes(e.target.value)}
@@ -408,7 +409,7 @@ export function AlgometerReadingInterface({
           
           {/* Readings Table */}
           <div className="py-1 w-full mb-6">
-            <label className="block text-base font-bold text-gray-900 mb-2">Algometer Readings</label>
+            <label className="block text-base font-semibold text-gray-900 mb-2">Algometer Readings</label>
             <ReadingTable rows={sessionReadings} 
               onRowsChange={setSessionReadings}
               sessionActive={sessionActive} />

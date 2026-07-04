@@ -34,7 +34,7 @@ router.get("/saved", protect, async (req: AuthRequest, res) => {
   }
 });
 
-// to get only saved readings
+// to get only all readings
 router.get("/readings", protect, async (req: AuthRequest, res) => {
   try {
     const readings = await Reading.find({
@@ -98,23 +98,33 @@ router.put("/:id", protect, async (req: AuthRequest, res) => {
 // Delete Reading
 router.delete("/:id", protect, async (req: AuthRequest, res) => {
   try {
+    console.log("DELETE route hit", req.params.id);
+    console.log("DELETE id:", req.params.id);
+
     const existing = await Reading.findOne({
       _id: req.params.id,
       userId: req.user!.id
     });
     
+    console.log("Found:", existing);
+
     if (!existing) {
       return res.status(404).json({ error: "Reading not found" });
     }
     
-    if (existing.status === "committed") {
-      return res.status(403).json({ error: "Committed readings cannot be deleted" });
-    }
+    // if (existing.status === "committed") {
+    //   // return res.status(403).json({ error: "Committed readings cannot be deleted" });
+    //   if(confirm("really")){
+    //     console.log('Commited reading delete');
+    //   }
+    //   return;
+    // }
     
     await Reading.findOneAndDelete({
       _id: req.params.id,
       userId: req.user!.id
     });
+    // await Reading.findOneAndDelete(req.params.id);
     
     res.json({ message: "Reading deleted successfully" });
     
@@ -123,4 +133,5 @@ router.delete("/:id", protect, async (req: AuthRequest, res) => {
     res.status(400).json({ error: "Failed to delete reading" });
   }
 });
+
 export default router;

@@ -246,6 +246,35 @@ export default function App() {
     }
   };
 
+  const handleDeleteReading = async (reading: AlgometerReading) => {
+
+    try {
+      const status = reading.status;
+      // console.log("reading Id", reading._id);
+
+      if(status == "saved"){
+        if(confirm("Do you want to delete Saved Reading?")){
+          await api.delete(`/readings/${reading._id}`);
+        }
+      }
+
+      if(status == "committed"){
+        if(confirm("Do you really want to permanantly delete committed readings and Note? This action cannot be undone."))
+        await api.delete(`/readings/${reading._id}`);
+      }
+
+      await fetchReadings(reading.patientId)
+      // setPatients(prev => prev.filter(p => p.id !== patientId));
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete reading");
+    } finally {
+      // await fetchReadings(reading.patientId)
+      toast.success("Reading deleted successfully");
+    }
+  };
+
   type FirebaseReading = {
     muscle: string;
     pointPressureThreshold: number;
@@ -374,12 +403,15 @@ export default function App() {
 
   const selectedPatient = selectedPatientId ? patients.find(p => p.id === selectedPatientId) : null;
 
+  // console.log("handleDeleteReading:", handleDeleteReading);
+  // console.log("typeof handleDeleteReading:", typeof handleDeleteReading);
+  
   return (
     <div className="w-screen h-screen flex flex-col overflow-hidden bg-gray-50">
       <Toaster position="top-right" richColors />
       
       {/* Header */}
-      <header className="bg-white h-[80px] flex-shrink-0 shadow-sm">
+      <header className="bg-gray-10 h-[80px] flex-shrink-0 shadow-sm">
         {/* <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 py-4"> */}
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
@@ -414,7 +446,7 @@ export default function App() {
       <div className="flex w-full h-[calc(100vh-80px)] overflow-hidden">
 
         {/* Sidebar Navigation */}
-        <nav className={`flex-shrink-0 bg-gray-80 shadow-sm h-full p-4 transition-all duration-300 
+        <nav className={`flex-shrink-0 bg-gray-100 shadow-sm h-full p-4 transition-all duration-300 
                         relative ${isCollapsed ? 'w-20 min-w-[5rem] p-2' : 'w-64 min-w-[16rem] p-4'} overflow-y-auto`}>
           
           <div className={`w-full flex items-center mb-4 ${isCollapsed? 'justify-center' : 'justify-end'}`}>
@@ -510,7 +542,7 @@ export default function App() {
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 h-full overflow-y-auto p-6 ml-3 mr-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <main className="flex-1 h-full bg-gray-100 overflow-y-auto p-6 ml-3 mr-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {currentPage === 'dashboard' && (
             <Dashboard />
           )}
@@ -546,6 +578,7 @@ export default function App() {
             />
           )}
           
+          
           {currentPage === 'patient-detail' && selectedPatientId && selectedPatient && (
             <PatientDetail 
               patientId={selectedPatientId} 
@@ -554,6 +587,7 @@ export default function App() {
                 r => r.patientId === selectedPatientId && r.status === 'committed')}
               onBack={handleBackToPatients}
               hasReadings={readings.length > 0}
+              onDeleteReading={handleDeleteReading}
               onTakeReadings={() => handleOpenReadingInterface(selectedPatientId)}
               onEditPatient={() => {
                 setEditingPatientId(selectedPatientId);
