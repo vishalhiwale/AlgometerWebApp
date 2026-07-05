@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { ref, onChildAdded } from "firebase/database";
 import { db } from "../firebase";
+import { Trash2Icon } from "lucide-react";
 
 interface FirebaseReading {
   muscle: string;
@@ -71,6 +72,23 @@ function ReadingTable({
 
   }, [sessionActive]);
 
+  // Function to delete Record from table
+  const deleteRecord = (indexToDelete?:number) => {
+    try{
+
+      if(confirm("Are you sure you want to delete this record?")){
+  
+        onRowsChange((prevRows) => prevRows.filter((_, index) => index !== indexToDelete));
+        alert("Record Deleted");
+
+      }
+
+    } catch (error){
+
+      console.error(error);
+
+    }
+  };
 
   if (rows.length === 0) {
     return (
@@ -84,19 +102,28 @@ function ReadingTable({
   return (
     <div className="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden">
       <table className="w-full text-center ">
-        <thead className="bg-gray-50">
+        <thead className="bg-gray-100">
           <tr>
-            <th className="px-5 py-3 text-center text-base font-semibold border">Muscle (Type)</th>
-            <th className="px-5 py-3 text-center text-base font-semibold border">Point Pressure Threshold</th>
-            <th className="px-5 py-3 text-center text-base font-semibold border">Point Pressure Tolerance</th>
+            <th className="px-5 py-3 text-center text-base font-semibold">Muscle (Type)</th>
+            <th className="px-5 py-3 text-center text-base font-semibold">Point Pressure Threshold</th>
+            <th className="px-5 py-3 text-center text-base font-semibold">Point Pressure Tolerance</th>
+            <th className=""></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
           {rows.map((r, index) => (
-            <tr key={r.muscle + index}>
-              <td className="border py-1.5 ">{r.muscle}</td>
-              <td className="border py-1.5 ">{r.pointPressureThreshold} kPa</td>
-              <td className="border py-1.5 ">{r.pointPressureTolerance} kPa</td>
+            <tr key={r.muscle + index} className="">
+              <td className=" py-1.5 ">{r.muscle}</td>
+              <td className=" py-1.5 ">{r.pointPressureThreshold} kPa</td>
+              <td className=" py-1.5 ">{r.pointPressureTolerance} kPa</td>
+              <td className=" hover:bg-gray-200">
+                <button 
+                  className="flex ml-2 mr-1 items-center text-red-500"
+                  onClick={ () => deleteRecord(index) }
+                >
+                  <Trash2Icon className="w-5 h-5"/>
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

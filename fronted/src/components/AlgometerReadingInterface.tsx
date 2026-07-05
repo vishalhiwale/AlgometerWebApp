@@ -5,7 +5,7 @@ import { Patient, AlgometerReading } from '../types/algometer';
 import { remove, ref } from 'firebase/database';
 import { db } from '../firebase'
 import api from '../services/api';
-// import { fetchSavedReadings } from '../components/SavedReadings';
+import { SavedReadings } from '../components/SavedReadings';
 import { toast } from 'sonner';
 interface AlgometerReadingInterfaceProps {
   onClose: () => Promise<void>;
@@ -13,6 +13,7 @@ interface AlgometerReadingInterfaceProps {
   onCommit: ( reading: Omit<AlgometerReading, 'id' | 'timestamp'>, id?: string ) => void;
   onRefreshSavedReadings: () => void;
   onFetchReading: (patientId: string) => void;
+  onDeleteReading: (reading: AlgometerReading) => void;
   doctorName: string;
   existingReading?: AlgometerReading | null;
   availablePatients: Patient[];
@@ -37,6 +38,7 @@ export function AlgometerReadingInterface({
   onCommit,
   onRefreshSavedReadings,
   onFetchReading,
+  onDeleteReading,
   doctorName,
   existingReading,
   availablePatients,
@@ -130,28 +132,36 @@ export function AlgometerReadingInterface({
 
   const handleDiscard = async () => {
     try {
+      // console.log("handle Discard in AlgometerReadingInterface");  
       if (existingReading) {
       // console.log(existingReading.id);
-        if (confirm('Are you sure you want to discard all readings and Note? This action cannot be undone.')) {
+        if (confirm('Are you sure you want to discard it?')) {
 
-            await api.delete(`/readings/${existingReading.id}`)
-            toast.success("Reading deleted successfully");
-            await resetReadingSession();
+            // await api.delete(`/readings/${existingReading.id}`)
+            // toast.success("Reading deleted successfully");
+            // await resetReadingSession();
+            // console.log("Called App.tsx onDeleteReading");
+            onDeleteReading(existingReading);
 
         }
-
-        return;
+        // Fetch Saved Reading after deleting of Saved Reading
+        // onRefreshSavedReadings();
+        // return;
       }
-      if( confirm('Are you want to discard all readings?')){
-        await resetReadingSession();
-
+      if( existingReading?.readings.length ){
+        console.log(existingReading.readings);
+        if(confirm('Are you want to discard all readings?')){
+          await resetReadingSession();
+        }
       }
+
     } catch (error) {
 
       console.error(error);
       toast.error("Failed to delete reading");
 
     } finally {
+      await resetReadingSession();
       onRefreshSavedReadings();
       onClose();
     }
@@ -163,10 +173,9 @@ export function AlgometerReadingInterface({
       return;
     }
 
-    if (sessionReadings.length === 0) {
-      alert('No readings received from device yet');
-      return;
-    }
+    // if (sessionReadings.length === 0) {
+    //   alert('No readings received from device yet');
+    // }
 
     // onSave({
     //   patientId: selectedPatient!.id,
@@ -189,11 +198,11 @@ export function AlgometerReadingInterface({
       patientId: selectedPatient!.id,
       patientCode: selectedPatient!.patientCode,
       patientName: selectedPatient!.name,
-
+      
       doctorName: doctorName,
-      doctorNotes: doctorNotes,
+      doctorNotes: doctorNotes ? doctorNotes : "",
 
-      readings: sessionReadings.map(r => ({
+      readings: sessionReadings?.map(r => ({
         muscleName: r.muscle,
         threshold: r.pointPressureThreshold,
         tolerance: r.pointPressureTolerance

@@ -109,6 +109,29 @@ export default function App() {
       console.error("Failed to fetch readings", error);
     }
   };
+
+  const fetchSavedReadings = async () => {
+
+    try {
+
+      const response = await api.get("/readings/saved");
+      const data = Array.isArray(response.data) ? response.data : [];
+      const formatted = data.map((r: any) => ({
+        ...r,
+        id: r._id
+      }));
+
+      // console.log("Saved Readings: ",formatted);
+      setSavedReadings(formatted);
+
+    } catch (error) {
+
+      console.error("Failed to fetch saved readings: ",error);
+      setSavedReadings([]);
+
+    }
+
+  };
   
   // Modal states
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
@@ -253,7 +276,7 @@ export default function App() {
       // console.log("reading Id", reading._id);
 
       if(status == "saved"){
-        if(confirm("Do you want to delete Saved Reading?")){
+        if(confirm("Do you want to delete Saved Reading? this can't be undone.")){
           await api.delete(`/readings/${reading._id}`);
         }
       }
@@ -630,6 +653,7 @@ export default function App() {
           onRefreshSavedReadings={()=>
             setSavedReadingsRefreshKey(prev => prev+1)
           }
+          onDeleteReading={handleDeleteReading}
           onFetchReading={fetchReadings}
           doctorName={user?.name ?? ""}
           existingReading={editingReading}
