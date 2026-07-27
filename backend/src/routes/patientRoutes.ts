@@ -1,34 +1,15 @@
 import express from "express";
 import Patient from "../models/Patient";
+import { protect, AuthRequest } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-// Create new patient
-// router.post("/", async (req, res) => {
-//   try {
-//     // Count existing patients
-//     const count = await Patient.countDocuments();
-
-//     const generatedCode = `P${String(count + 1).padStart(3, "0")}`;
-
-//     const patient = new Patient({
-//       ...req.body,
-//       patientCode: generatedCode
-//     });
-
-//     const savedPatient = await patient.save();
-
-//     res.status(201).json(savedPatient);
-
-//   } catch (error) {
-//     console.error(error);
-//     res.status(400).json({ error: "Failed to create patient" });
-//   }
-// });
-router.post("/", async (req, res) => {
+router.post("/", protect, async (req: AuthRequest, res) => {
   try {
     // Find latest patient sorted by patientCode descending
-    const lastPatient = await Patient.findOne()
+    const lastPatient = await Patient.findOne({
+      userId: req.user!.id
+    })
       .sort({ patientCode: -1 })
       .select("patientCode");
 
@@ -43,6 +24,7 @@ router.post("/", async (req, res) => {
 
     const patient = new Patient({
       ...req.body,
+      userId: req.user!.id,
       patientCode: generatedCode
     });
 
@@ -58,26 +40,36 @@ router.post("/", async (req, res) => {
 
 
 // Get all patients
-router.get("/", async (req, res) => {
+router.get("/", protect, async (req: AuthRequest, res) => {
   try {
-    const patients = await Patient.find();
+
+    const patients = await Patient.find({
+      userId: req.user!.id
+    });
     res.json(patients);
+
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch patients" });
+
+    res.status(500).json({
+      error: "Failed to fetch patients" 
+    });
   }
 });
 
 export default router;
 
 //PUT Request to Edit Details
-router.put("/:id", async (req, res) => {
+router.put("/:id", protect, async (req: AuthRequest, res) => {
   try {
 
     console.log("Update ID:", req.params.id);
     console.log("Update Body:", req.body);
 
-    const updatedPatient = await Patient.findByIdAndUpdate(
-      req.params.id,
+    const updatedPatient = await Patient.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        userId: req.user!.id
+      },
       req.body,
       { new: true }
     );
@@ -94,9 +86,12 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete Patient
-router.delete("/:id", async (req, res) => {
+router.delete("/:id",protect, async (req: AuthRequest, res) => {
   try {
-    const deletedPatient = await Patient.findByIdAndDelete(req.params.id);
+    const deletedPatient = await Patient.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user!.id
+    });
 
     if (!deletedPatient) {
       return res.status(404).json({ error: "Patient not found" });

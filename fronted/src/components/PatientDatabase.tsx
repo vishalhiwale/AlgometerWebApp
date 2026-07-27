@@ -58,7 +58,7 @@ export function PatientDatabase({
     { key: "upcoming", label: "Upcoming" },
     { key: "overdue", label: "Overdue" },
     { key: "discharged", label: "Discharged" },
-    { key: "awaiting", label: "Awaiting"}
+    { key: "awaiting", label: "Awaiting"},
   ];
 
     // const formatDate = (timestamp: string) => {
@@ -74,10 +74,10 @@ export function PatientDatabase({
     };
 
 const columns = [
-  { key: "patientCode", label: "Patient ID" },
-  { key: "name", label: "Name" },
+  { key: "patientCode", label: "Patient ID", width: "min-w-[50px] w-[100px]"},
+  { key: "name", label: "Name", width: "min-w-[150px] w-[200px]"}, // check width for future
   { key: "age", label: "Age" },
-  { key: "diagnosis", label: "Diagnosis" },
+  { key: "diagnosis", label: "Diagnosis", width: "min-w-[180px] w-[250px]"},
   { key: "lastVisitDate", label: "Last Visit" },
   { key: "nextCheckupDate", label: "Next Checkup" },
   { key: "status", label: "Status" },
@@ -98,6 +98,8 @@ const dateStatus = (nextCheckupDate: string | null) => { // Added '=' here
 
   return daysUntil;
 };
+
+  // console.log(patients);
 
 const filteredPatients = patients.filter((patient) => {
   const name = patient.name?.toLowerCase() || "";
@@ -187,7 +189,7 @@ const filteredPatients = patients.filter((patient) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-h-screen">
       <div>
         {/* <h2 className="text-gray-900">Patient Database</h2> */}
         <div className="flex justify-between items-center">
@@ -210,12 +212,14 @@ const filteredPatients = patients.filter((patient) => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
         <div className="flex flex-col md:flex-row gap-4">
           
           {/* Search  */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 ">
+              <Search className="w-5 h-5 text-gray-400" />
+            </div>
             <input
               type="text"
               placeholder="Search by name, ID, or diagnosis..."
@@ -226,7 +230,7 @@ const filteredPatients = patients.filter((patient) => {
           </div>
 
           {/* Selecting Filter Status */}
-          <div className="flex bg-gray-100 rounded-xl p-1 flex-wrap">
+          <div className="flex bg-gray-100 rounded-xl p-1 flex-wrap items-center justify-center gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -251,20 +255,24 @@ const filteredPatients = patients.filter((patient) => {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 {columns.map((col) => (
-                  <th key={col.key} className="px-5 py-4 text-left text-base font-bold whitespace-nowrap">
+                  <th key={col.key} className={`px-5 py-4 text-center text-base font-bold whitespace-nowrap ${col.width || ''}`}>
                     {col.label}
                   </th>
                 ))}
-                <th className="px-5 py-4 text-center font-bold">Actions</th>
+                <th className="px-5 py-4 text-center text-base whitespace-nowrap font-bold">Actions</th>
               </tr>
             </thead>
             
             <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
               {filteredPatients.map((patient) => (
                 <tr 
-                  key={patient.id}
-                  onClick={() => onViewPatient(patient.id)}
-                  className="hover:bg-blue-50 cursor-pointer transition">
+                  key={patient.id || patient.patientCode} //check here
+                  // key={row-patient.id-{patient.patientCode}} OR check here
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewPatient(patient.id);
+                  }}
+                  className="hover:bg-blue-50 cursor-pointer transition text-center capitalize">
                   
                   {columns.map((col) => {
                     let value = patient[col.key];
@@ -286,18 +294,21 @@ const filteredPatients = patients.filter((patient) => {
                     }
 
                     return (
-                      <td key={`${patient.id || patient.patientCode}-${col.key}`} className="px-6 py-4 text-left text-grey-600 font-medium break-words">
+                      <td key={`${patient.id || patient.patientCode}-${col.key}`} className={`px-6 py-4 text-center text-gray-800 font-medium break-words ${col.width || ''}`}>
                         {value || "-"}
                       </td>
                     );
                   })}
 
                   {/* Actions */}
-                  <td className="px-6 py-4 text-center vertically-middle">
-                    <div className="flex gap-x-6 ">
+                  <td className="px-6 py-4 text-center align-middle">
+                    <div className="flex gap-x-2 justify-center">
                       <button
-                        onClick={() => onViewPatient(patient.id)}
-                        className="px-3 py-1 border border-blue-500 border-2x bg-blue-400 text-white text-xs font-semibold flex items-center gap-1 rounded-lg hover:bg-blue-500"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewPatient(patient.id);
+                        }}
+                        className="px-3 py-1 border-2 border-blue-500 bg-blue-400 text-white text-xs font-semibold flex items-center gap-1 rounded-lg hover:bg-blue-500"
                       >
                         <EyeIcon className="w-4 h-4"/>
                         <span>View</span>
@@ -309,7 +320,7 @@ const filteredPatients = patients.filter((patient) => {
                             e.stopPropagation();
                             onEditPatient(patient.id);
                           }}
-                          className="px-3 py-1 border border-amber-500 border-2x bg-amber-400 text-white text-xs font-semibold flex item-center gap-1 rounded-lg hover:bg-amber-500"
+                          className="px-3 py-1 border-2 border-amber-500 bg-amber-400 text-white text-xs font-semibold flex item-center gap-1 rounded-lg hover:bg-amber-500"
                         >
                           <Edit className="w-4 h-4"/>
                           <span>Edit</span>
@@ -322,7 +333,7 @@ const filteredPatients = patients.filter((patient) => {
                             e.stopPropagation();
                             onDeletePatient(patient.id);
                           }}
-                          className="px-3 py-1 border border-red-500 bg-red-400 text-white text-xs font-semibold flex items-center gap-1 rounded-lg hover:bg-red-500"
+                          className="px-3 py-1 border-2 border-red-500 bg-red-400 text-white text-xs font-semibold flex items-center gap-1 rounded-lg hover:bg-red-500"
                         >
                           <TrashIcon className="w-4 h-4" />
                           <span>Delete</span>

@@ -1,8 +1,10 @@
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
-import { ArrowLeft, Calendar, FileText, TrendingUp, MapPin, Activity, PenBoxIcon, DeleteIcon, DrumstickIcon, TrashIcon, Edit, ClipboardPlusIcon } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, TrendingUp, MapPin, Activity, PenBoxIcon, DeleteIcon, DrumstickIcon, TrashIcon, Edit, ClipboardPlusIcon, FileTextIcon, FileLineChartIcon, LucideTrash2 } from 'lucide-react';
 import { BodyDiagram } from './BodyDiagram';
 import { Patient, AlgometerReading } from '../types/algometer';
 import React from 'react';
+import api from '../services/api';
+import { toast } from 'sonner';
 
 interface PatientDetailProps {
   patientId: string;
@@ -13,6 +15,7 @@ interface PatientDetailProps {
   onTakeReadings: () => void;
   onEditPatient?: () => void;
   onDeletePatient?: () => void;
+  onDeleteReading?: (reading: AlgometerReading) => void;
 }
 
 export function PatientDetail({ 
@@ -22,7 +25,8 @@ export function PatientDetail({
   hasReadings, 
   onTakeReadings, 
   onEditPatient, 
-  onDeletePatient 
+  onDeletePatient,
+  onDeleteReading,
 }: PatientDetailProps) {
   // console.log("patient: ", patient);
   const [visibleMuscles, setVisibleMuscles] = React.useState<string[]>([]);
@@ -143,6 +147,26 @@ export function PatientDetail({
     });
   };
 
+  // const handleDeleteReading = async (reading: any) => {
+  //   try {
+  //     console.log(reading);
+  //       if (confirm('Do you really want to permanantly delete committed readings and Note? This action cannot be undone.')) {
+
+  //           await api.delete(`/readings/${reading._id}`)
+  //           toast.success("Reading deleted successfully");
+  //           // await resetReadingSession();
+
+  //       }
+  //   } catch (error) {
+
+  //     console.error(error);
+  //     toast.error("Failed to delete reading");
+
+  //   }
+  // };
+
+  // console.log("Readings: ",readings);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -238,7 +262,7 @@ export function PatientDetail({
 
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-gray-900 flex items-center gap-2 font-bold">
-                <FileText className="w-5 h-5" />
+                <FileLineChartIcon className="w-5 h-5" />
                 Latest Algometer Readings (kPa)
               </h3>
 
@@ -255,7 +279,7 @@ export function PatientDetail({
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {latestReading.readings.map((reading, idx) => (
-                <div key={reading._id} className="shadow-sm rounded-lg p-4 bg-gray-50 border-grey-300">
+                <div key={reading._id} className="shadow-sm rounded-lg p-4 bg-gray-50 border-gray-300">
                   <p className="text-gray-900 text-md font-medium mb-2">{reading.muscleName}</p>
                   <div className="space-y-1">
                     <p className="text-grey-900">
@@ -275,10 +299,80 @@ export function PatientDetail({
               </div>
             )}
           </div>
+
+          {/* Total Readings List */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 className='text-gray-900 text-md flex items-center gap-2 font-bold mb-4'>
+              <FileTextIcon className='w-5 h-5'/>
+              Reading List
+            </h3>
+            <div className='w-full h-80 overflow-y-auto shadow-sm border-2 border-gray-100 rounded-lg'>
+              {sortedReadings.map((reading)=>(
+
+                <div
+                  key={reading._id} 
+                  className='rounded-lg mb-2 p-4 bg-gray-100 border-gray-200'>
+
+                  <div className="mb-2 flex justify-between items-center">
+                    <p className="font-medium ml-3">
+
+                      {formatDate(reading.createdAt)}
+
+                    </p>
+
+                    <div className='flex items-center gap-4 mr-3'>
+
+                      <p className="text-sm text-gray-500">
+                          {reading.readings.length} muscles
+                      </p>
+
+                      { onDeleteReading && (
+                        <button
+                          // className="px-3 py-1 border-2 border-red-500 bg-red-400 text-white text-xs font-semibold flex items-center gap-1 rounded-lg hover:bg-red-500"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // handleDeleteReading(reading);
+                            onDeleteReading(reading);
+                          }}
+                        >
+                          <LucideTrash2 color='rgba(227, 53, 53, 0.97)' className='w-5 h-5'/>
+                        </button>
+                      )}
+
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+                    {reading.readings.map((r, idx) => (
+                      <div key={r._id} className="rounded-lg p-2 h-25 bg-white border-gray-300">
+                        <p className="text-gray-900 text-md font-medium mb-1 ml-2">{r.muscleName}</p>
+                        
+                        <div className="space-y-0 ml-2 text-sm">
+                          <p className="text-grey-900">
+                            <span className="text-gray-600">Threshold:</span> {r.threshold !== null ? `${r.threshold} kPa` : 'N/A'}
+                          </p>
+                          <p className="text-grey-900">
+                            <span className="text-gray-600">Tolerance:</span> {r.tolerance !== null ? `${r.tolerance} kPa` : 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {reading.doctorNotes && (
+                    <div className='mt-3 rounded-lg bg-white p-3'>
+                      <p className='text-gray-900 text-base font-semibold mb-1 ml-2'>Doctor Notes</p>
+                      <p className='ml-2'>{reading.doctorNotes}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </>
       )}
-
-      {hasReadings && readings.length > 0 ? (
+      
+      { hasReadings && readings.length > 0 ? (
         <>
           {/* Pain Threshold Progression - Full Width */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -359,29 +453,44 @@ export function PatientDetail({
             <div className="w-full overflow-x-auto">
               <div 
                 className="min-w-[900px]"
-                style={{ width: `${Math.max(progressionData.length * 80, 600)}px` }}
+                style={{ width : `${Math.max(progressionData.length * 80, 100)}px` }}
               >
                 <ResponsiveContainer width="100%" height={400}>
                   <LineChart 
                     data={progressionData}
-                    margin={{ top:20, right: 20, left:10, bottom:40 }}
+                    margin={{ top:20, right: 20, left:30, bottom:40 }}
                   >
                     <CartesianGrid 
                       strokeDasharray="3 3" stroke="#e5e7eb"
                     />
                     <XAxis 
-                      label={{ value: 'Time', position: 'insideBottom', offset: -25}}
-                      dataKey="date" tick={{ fontSize: 12}}
+                      label={{ value: 'Time', position: 'insideBottom', offset: -25, fontSize: 16}}
+                      dataKey="date" 
+                      tick={{ fontSize: 12}}
+                      // padding={{ left: 15, right:0}} 
+                      alignmentBaseline="middle"
+                      padding={{ left:20, right: 0}}
+
                     />
                     <YAxis 
-                      label={{ value: 'Pressure', angle: -90, position: 'insideLeft' }} 
+                      label={{ value: 'Pressure', angle: -90, position: 'insideLeft', fontSize: 16, offset: -5 }} 
                       tick={{ fontSize: 12 }}
                     />
                     <Tooltip 
-                      contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
-                      labelStyle={{ fontWeight: 'bold' }}
+                      // contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                      contentStyle={{ 
+                        fontSize: '14px',
+                        textAlign: 'left',
+                        textSizeAdjust : '10px sans-serif',
+                        backgroundColor: '#fff', 
+                        borderRadius: '8px', 
+                        border: '1px solid #ccc',
+                        fontFamily: 'sans-serif' 
+                      }}                      
+                      itemStyle={{ fontWeight: 400 }}
+                      labelStyle={{ fontWeight: 600 }}
                       formatter={(value, name) => [`${value} kPa`, name]}
-                      cursor={{ stroke: '#9ca3af', strokeWidth: 1}}
+                      cursor={{ stroke: '#9ca3af', strokeWidth: 1 }}
                     />
                     {/* <Legend 
                       wrapperStyle={{ fontSize: '12px'}}
@@ -399,26 +508,27 @@ export function PatientDetail({
                       return (
                         <React.Fragment key={muscleName}>
                           <Line 
-                            key={`${muscleName}_PPT`}
-                            type="monotone" 
-                            dataKey={`${muscleName}_PPT`} 
-                            stroke={color} 
-                            name={`${muscleName} (T)`}
-                            strokeWidth={3}
-                            dot={{ r: 4, strokeWidth: 2 }}
-                            activeDot={{ r: 6 }}
-                            connectNulls
-                          />
-                          <Line 
                             key={`${muscleName}_PPTol`}
                             type="monotone" 
                             dataKey={`${muscleName}_PPTol`} 
                             stroke={color} 
                             strokeDasharray="6 2"
-                            strokeWidth={3}
+                            strokeWidth={2}
                             opacity={0.7}
                             name={`${muscleName} (Tol)`}
-                            dot={{ r: 4, strokeWidth: 2 }}
+                            dot={{ r: 3, strokeWidth: 2, fill: '#fff' }}
+                            activeDot={{ r : 5, stroke: color, strokeDasharray:"6 3", strokeWidth: 2, fill: '#fff'}}
+                            connectNulls
+                          />                          
+                          <Line 
+                            key={`${muscleName}_PPT`}
+                            type="monotone" 
+                            dataKey={`${muscleName}_PPT`} 
+                            stroke={color} 
+                            name={`${muscleName} (T)`}
+                            strokeWidth={2}
+                            dot={{ r: 3, stroke: color, strokeWidth: 1, fill: true ? color:'#fff' }}
+                            activeDot={{ r: 4, stroke: color, strokeWidth: 2 }}
                             connectNulls
                           />
                         </React.Fragment>
@@ -432,24 +542,31 @@ export function PatientDetail({
 
           {/* Current Pain Map */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> */}     
+            <h3 className="text-gray-900 text-md font-bold flex items-center gap-2">
+              <MapPin className="w-5 h-5" />
+              Current Pain Map (Latest Reading)
+            </h3>
+
               {/* Radar Chart */}
-              <div>
-                <h3 className="text-gray-900 mb-4 font-bold flex items-center gap-2">
-                  <MapPin className="w-5 h-5" />
-                  Current Pain Map (Latest Reading)
-                </h3>
+              <div className="w-full overflow-x-auto mt-5 flex justify-start">
                 <ResponsiveContainer width="100%" height={400}>
-                  <RadarChart data={radarData}>
-                    <PolarGrid stroke='#e5e7eb'/>
+                  <RadarChart 
+                    data={radarData}
+                    outerRadius={"90%"}
+                  >
+                    <PolarGrid 
+                      stroke='#d1d3d8'
+                    />
                     <PolarAngleAxis 
                       dataKey="muscleName"
-                      tick={{ fontSize: 12}}
+                      tick={{ fontSize: 16, fill: "#4b5563" }}
                     />
                     <PolarRadiusAxis 
                       angle={90}
                       domain={[0, 'auto']} 
-                      tick={{ fontSize: 10}}
+                      axisLine={{ stroke: '#9ca3af'}}
+                      tick={{ fontSize: 12, fill: "#4b5563", dy: 10, dx: 10}}
                     />
                     <Radar 
                       name="Threshold (kPa)" dataKey="PPT"
@@ -463,9 +580,20 @@ export function PatientDetail({
                     />
                     <Tooltip 
                       formatter={(value, name) => [`${value} kPa`, name]}
-                      contentStyle={{ borderRadius: '8px' }}
+                      contentStyle={{ 
+                        fontSize: '14px',
+                        textAlign: 'left',
+                        textSizeAdjust : '10px sans-serif',
+                        backgroundColor: '#fff', 
+                        borderRadius: '8px', 
+                        border: '1px solid #ccc',
+                        fontFamily: 'sans-serif' 
+                      }}  
+                      itemStyle={{ fontWeight: 400 }}
+                      labelStyle={{ fontWeight: 600 }}   
+                      cursor={{ stroke: '#9ca3af', strokeWidth: 1 }}                                         
                     />
-                    <Legend />
+                    {/* <Legend /> */}
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
@@ -478,7 +606,7 @@ export function PatientDetail({
                   measurementPoints={measurementPoints}
                 />
               </div> */}
-            </div>
+            
           </div>
         </>
       ) : (

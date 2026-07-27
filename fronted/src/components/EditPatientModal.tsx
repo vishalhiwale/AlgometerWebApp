@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Save } from 'lucide-react';
+import { X, Save, XIcon } from 'lucide-react';
 // import {} 
 
 interface EditPatientModalProps {
@@ -7,6 +7,8 @@ interface EditPatientModalProps {
   onClose: () => void;
   onEditPatient: (patient: Patient) => void;
 }
+
+const formSharedClass = "w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm rounded-lg p-2 bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y"
 
 export function EditPatientModal({ 
   patient, 
@@ -93,44 +95,47 @@ export function EditPatientModal({
     });
 
     onClose();
+
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-gray-100 rounded-xl shadow-xl max-w-2xl w-full my-8 max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-gray-900">Edit Patient Details</h2>
+            <h2 className="text-2xl font-bold text-gray-700 tracking-tight">Edit Patient Details</h2>
             <p className="text-gray-600 text-sm mt-1">Update patient information</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-3 hover:bg-gray-200 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-700" />
+            <XIcon className="w-5 h-5 text-gray-700" />
           </button>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             {/* Patient ID (Read-only) */}
             <div className="md:col-span-2">
-              <label className="block text-gray-700 mb-2">
+              <label className="block text-base font-semibold text-gray-900 mb-2">
                 Patient ID
               </label>
               <input
                 type="text"
                 value={patient.id}
                 disabled
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                // className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                className={formSharedClass}
               />
             </div>
 
             {/* Name */}
             <div className="md:col-span-2">
-              <label className="block text-gray-700 mb-2">
+              <label className="block text-base font-semibold text-gray-900 mb-2">
                 Patient Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -138,14 +143,14 @@ export function EditPatientModal({
                 value={formData.name ?? ""}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Rajesh Kumar"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={formSharedClass}
                 required
               />
             </div>
 
             {/* Age */}
             <div>
-              <label className="block text-gray-700 mb-2">
+              <label className="block text-base font-semibold text-gray-900 mb-2">
                 Age <span className="text-red-500">*</span>
               </label>
               <input
@@ -155,20 +160,20 @@ export function EditPatientModal({
                 placeholder="e.g., 45"
                 min="1"
                 max="120"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={formSharedClass}
                 required
               />
             </div>
 
             {/* Gender */}
             <div>
-              <label className="block text-gray-700 mb-2">
+              <label className="block text-base font-semibold text-gray-900 mb-2">
                 Gender <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.gender ?? ""}
                 onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={formSharedClass}
                 required
               >
                 <option value="Male">Male</option>
@@ -179,7 +184,7 @@ export function EditPatientModal({
 
             {/* Contact */}
             <div className="md:col-span-2">
-              <label className="block text-gray-700 mb-2">
+              <label className="block text-base font-semibold text-gray-900 mb-2">
                 Contact Number <span className="text-red-500">*</span>
               </label>
               <input
@@ -188,62 +193,61 @@ export function EditPatientModal({
                 onChange={handlePhoneChange}
                 placeholder="+91-98765-43210"
                 pattern="\+91-\d{5}-\d{5}"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={formSharedClass}
                 required
               />
-              <p className="text-gray-500 text-sm mt-1">Format: +91-xxxxx-xxxxx</p>
             </div>
 
             {/* Diagnosis */}
             <div className="md:col-span-2">
-              <label className="block text-gray-700 mb-2">
+              <label className="block text-base font-semibold text-gray-900 mb-2">
                 Diagnosis <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={formData.diagnosis ?? ""}
                 onChange={(e) => setFormData({ ...formData, diagnosis: e.target.value })}
                 placeholder="e.g., Chronic TMJ Disorder"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y"
+                className={formSharedClass}
                 required
               />
             </div>
 
             {/* Last Visit */}
             <div>
-              <label className="block text-gray-700 mb-2">
+              <label className="block text-base font-semibold text-gray-900 mb-2">
                 Last Visit Date <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
                 value={formData.lastVisitDate ?? ""}
                 onChange={(e) => setFormData({ ...formData, lastVisitDate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={formSharedClass}
                 required
               />
             </div>
 
             {/* Next Checkup */}
             <div>
-              <label className= "block text-gray-700 mb-2">
+              <label className= "block text-base font-semibold text-gray-900 mb-2">
                 Next Checkup Date
               </label>
               <input
                 type="date"
                 value={formData.nextCheckupDate ?? ""}
                 onChange={(e) => setFormData({ ...formData, nextCheckupDate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={formSharedClass}
               />
             </div>
 
             {/* Status */}
             <div>
-              <label className="block text-gray-700 mb-2">
+              <label className="block text-base font-semibold text-gray-900 mb-2">
                 Patient Status <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.status ?? ""}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'discharged' })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={formSharedClass}
                 required
               >
                 <option value="active">Active</option>
@@ -253,14 +257,14 @@ export function EditPatientModal({
 
             {/* Photo */}
             <div className="md:col-span-2">
-              <label className="block text-gray-700 mb-2">
+              <label className="block text-base font-semibold text-gray-900 mb-2">
                 Patient Photo
               </label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={handlePhotoUpload}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={formSharedClass}
               />
               {formData.photo && (
                 <div className="mt-2">

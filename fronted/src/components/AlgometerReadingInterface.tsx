@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
-import { X, Plus, Save, Check, XCircle, User, Divide, XIcon, LucideTrash2, SaveIcon, Database } from 'lucide-react';
+import { X, Plus, Save, Check, XCircle, User, Divide, XIcon, LucideTrash2, SaveIcon, Database, UserCircle2Icon } from 'lucide-react';
 import ReadingTable from './ReadingTable';
 import { Patient, AlgometerReading } from '../types/algometer';
+import { remove, ref } from 'firebase/database';
+import { db } from '../firebase'
+import api from '../services/api';
+import { SavedReadings } from '../components/SavedReadings';
+import { toast } from 'sonner';
 interface AlgometerReadingInterfaceProps {
-  onClose: () => void;
-  onSave: (reading: Omit<AlgometerReading, 'id' | 'timestamp'>) => void;
-  onCommit: (reading: Omit<AlgometerReading, 'id' | 'timestamp'>,
-    id?:string
-  ) => void;
+  onClose: () => Promise<void>;
+  onSave: ( reading: Omit<AlgometerReading, 'id' | 'timestamp'>, id?: string ) => void;
+  onCommit: ( reading: Omit<AlgometerReading, 'id' | 'timestamp'>, id?: string ) => void;
+  onRefreshSavedReadings: () => void;
+  onFetchReading: (patientId: string) => void;
+  onDeleteReading: (reading: AlgometerReading) => void;
   doctorName: string;
   existingReading?: AlgometerReading | null;
   availablePatients: Patient[];
@@ -30,6 +36,9 @@ export function AlgometerReadingInterface({
   onClose, 
   onSave,
   onCommit,
+  onRefreshSavedReadings,
+  onFetchReading,
+  onDeleteReading,
   doctorName,
   existingReading,
   availablePatients,
@@ -39,6 +48,9 @@ export function AlgometerReadingInterface({
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     existingReading?.patientId || preSelectedPatientId || ''
   );
+
+    // To turn on and off listener we use session active state
+  const [sessionActive, setSessionActive] = useState(false);
 
   const [doctorNotes, setDoctorNotes] = useState(existingReading?.doctorNotes || '');
 
@@ -60,19 +72,39 @@ export function AlgometerReadingInterface({
   //     )
   //   }
   // }, [existingReading]);
+
+    //
+  const resetReadingSession = async () => {
+    setSessionReadings([]);
+    setSessionActive(false);
+    setDoctorNotes("");
+
+    await remove(
+      ref(db, "AlgometerReadings/Demo_Algometer_001/Readings")
+    );
+  };
+
   useEffect(() => {
 
-  if (!existingReading) return;
+    // Existing readings are available then convert them and set session active
+    if (existingReading){
+      const convertedReadings = existingReading.readings.map((r) => ({
+        muscle: r.muscleName,
+        pointPressureThreshold: r.threshold,
+        pointPressureTolerance: r.tolerance
+      }));
+      
+      setSessionReadings(convertedReadings);
+      setSessionActive(true);
+    }
 
-  const convertedReadings = existingReading.readings.map((r) => ({
-    muscle: r.muscleName,
-    pointPressureThreshold: r.threshold,
-    pointPressureTolerance: r.tolerance
-  }));
+    // If Patient is already selected then set session Active
+    if(preSelectedPatientId){
+      setSessionActive(true)
+    }
+  
 
-  setSessionReadings(convertedReadings);
-
-}, [existingReading]);
+  }, [existingReading]);
 
   const selectedPatient = allPatients.find(p => p.id === selectedPatientId);
   
@@ -80,44 +112,118 @@ export function AlgometerReadingInterface({
     if (!date) return null;
     return new Date(date).toLocaleDateString("en-GB");
   };
+  
+  // const handleDeletePatient = async (patientId: string) => {
+  //   if (!confirm('Are you sure you want to delete this patient? This action cannot be undone.')) return;
 
-  const handleDiscard = () => {
-    if (confirm('Are you sure you want to discard all readings? This action cannot be undone.')) {
+  //   try {
+
+  //     await api.delete(`/patients/${patientId}`);
+
+  //     setPatients(prev => prev.filter(p => p.id !== patientId));
+
+  //     toast.success("Patient deleted successfully");
+
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error("Failed to delete patient");
+  //   }
+  // };
+
+  const handleDiscard = async () => {
+    try {
+      // console.log("handle Discard in AlgometerReadingInterface");  
+      if (existingReading) {
+      // console.log(existingReading.id);
+        if (confirm('Are you sure you want to discard it?')) {
+
+            // await api.delete(`/readings/${existingReading.id}`)
+            // toast.success("Reading deleted successfully");
+            // await resetReadingSession();
+            // console.log("Called App.tsx onDeleteReading");
+            onDeleteReading(existingReading);
+
+        }
+        // Fetch Saved Reading after deleting of Saved Reading
+        // onRefreshSavedReadings();
+        // return;
+      }
+      if( existingReading?.readings.length ){
+        console.log(existingReading.readings);
+        if(confirm('Are you want to discard all readings?')){
+          await resetReadingSession();
+        }
+      }
+
+    } catch (error) {
+
+      console.error(error);
+      toast.error("Failed to delete reading");
+
+    } finally {
+      await resetReadingSession();
+      onRefreshSavedReadings();
       onClose();
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedPatientId) {
       alert('Please select a patient');
       return;
     }
 
-    if (sessionReadings.length === 0) {
-      alert('No readings received from device yet');
-      return;
-    }
+    // if (sessionReadings.length === 0) {
+    //   alert('No readings received from device yet');
+    // }
 
-    onSave({
+    // onSave({
+    //   patientId: selectedPatient!.id,
+    //   patientCode: selectedPatient!.patientCode,
+    //   patientName: selectedPatient!.name,
+
+    //   doctorName: doctorName,
+    //   doctorNotes: doctorNotes,
+
+    //   readings: sessionReadings.map(r => ({
+    //     muscleName: r.muscle,
+    //     threshold: r.pointPressureThreshold,
+    //     tolerance: r.pointPressureTolerance
+    //   })),
+
+    //   status: "saved"
+    // });
+
+    const payload: Omit<AlgometerReading, "id" | "timestamp"> = {
       patientId: selectedPatient!.id,
       patientCode: selectedPatient!.patientCode,
       patientName: selectedPatient!.name,
-
+      
       doctorName: doctorName,
-      doctorNotes: doctorNotes,
+      doctorNotes: doctorNotes ? doctorNotes : "",
 
-      readings: sessionReadings.map(r => ({
+      readings: sessionReadings?.map(r => ({
         muscleName: r.muscle,
         threshold: r.pointPressureThreshold,
         tolerance: r.pointPressureTolerance
       })),
 
       status: "saved"
-    });
+    };
+
+    if (existingReading) {
+      onSave(payload, existingReading?.id);
+    } else {
+      onSave(payload);
+    }
+
+    await resetReadingSession();
+    onRefreshSavedReadings();
+    onClose();
   };
 
   
-  const handleCommitToDB = () => {
+  const handleCommitToDB = async () => {
 
     if (!selectedPatientId) {
       alert('Please select a patient');
@@ -152,34 +258,39 @@ export function AlgometerReadingInterface({
     //   // sessionTime: new Date().toISOString()
     // });
 
-  const payload: Omit<AlgometerReading, "id" | "timestamp"> = {
-    patientId: selectedPatient!.id,
-    patientCode: selectedPatient!.patientCode,
-    patientName: selectedPatient!.name,
+    const payload: Omit<AlgometerReading, "id" | "timestamp"> = {
+      patientId: selectedPatient!.id,
+      patientCode: selectedPatient!.patientCode,
+      patientName: selectedPatient!.name,
 
-    doctorName: doctorName,
-    doctorNotes: doctorNotes,
+      doctorName: doctorName,
+      doctorNotes: doctorNotes,
 
-    readings: sessionReadings.map(r => ({
-      muscleName: r.muscle,
-      threshold: r.pointPressureThreshold,
-      tolerance: r.pointPressureTolerance
-    })),
+      readings: sessionReadings.map(r => ({
+        muscleName: r.muscle,
+        threshold: r.pointPressureThreshold,
+        tolerance: r.pointPressureTolerance
+      })),
 
-    status: "committed"
-  };
+      status: "committed"
+    };
 
-  if (existingReading) {
-    onCommit(payload, existingReading?.id );
-  } else {
-    onCommit(payload);
-  }
+    if (existingReading) {
+      onCommit(payload, existingReading?.id );
+    } else {
+      onCommit(payload);
+    }
 
+    await resetReadingSession();
+    onRefreshSavedReadings();
+    onClose();
+    onFetchReading(selectedPatient.id);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full my-8 flex flex-col max-h-[95vh]">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 ">
+
+      <div className="bg-gray-100 rounded-xl shadow-xl max-w-3xl w-full my-8 flex flex-col max-h-[95vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
@@ -187,107 +298,115 @@ export function AlgometerReadingInterface({
             {/* <p className="text-gray-600 text-sm mt-1">Record pain pressure threshold measurements</p> */}
           </div>
           <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            onClick={() => {onClose(); resetReadingSession();}}
+            className="p-3 hover:bg-gray-200 rounded-lg transition-colors"
           >
             <XIcon className="w-5 h-5 text-gray-700" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
-          {/* Patient Selection */}
-          <div className="mb-6">
-            <label className="block text-md font-medium text-gray-900 mb-2 ">
-              Select Patient <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={selectedPatientId}
-              onChange={(e) => setSelectedPatientId(e.target.value)}
-              className="w-full px-4 py-2 text-md font-normal 
-                        border border-gray-300 rounded-lg 
-                        shadow-sm p-3 bg-gray-50 
-                        focus:outline-none focus:ring-1 focus:ring-blue-400
-                        "
-              disabled={!!existingReading?.patientId}
-            >
-              <option value="">Select Patient</option>
-              
-              {(existingReading?.patientId ? allPatients : availablePatients).map(patient => (
-                <option key={patient.id} value={patient.id} className='focus: font-semibold'>
-                  {patient.name} 
-                  {/* ({patient.patientCode}) To show Patient code along name */}
-                </option>
-              ))}
-            </select>
+        <div className="flex-1 p-6 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          
+          {/* Patient Selection & Photo*/}
+          <div className="mb-4 flex items-start justify-between gap-6">
 
-            {/* New Select option */}
-                      {/* <select
-            value={selectedPatientId}
-            onChange={(e) => setSelectedPatientId(e.target.value)}
-          >
-            <option value="">-- Select a Patient --</option>
+            {/* Patient Selection */}
+            <div className="flex-1 mr-6">
+              <label className="block text-base font-semibold text-gray-900 mb-2 ">
+                Select Patient <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedPatientId}
+                onChange={(e) => {
+                    setSelectedPatientId(e.target.value)
 
-            {(existingReading?.patientId ? allPatients : availablePatients).map(patient => (
-              <option key={patient.id} value={patient.id}>
-                {patient.name} ({patient.patientCode})
-              </option>
-            ))}
-          </select> */}
+                    if (e.target.value) {
+                      setSessionActive(true)
+                    }
+                  }
+                }
+                className="w-full px-4 py-2 text-md font-normal 
+                          border border-gray-300 rounded-lg 
+                          shadow-sm p-3 bg-gray-50 
+                          focus:outline-none focus:ring-1 focus:ring-blue-400
+                          capitalize
+                          "
+                disabled={!!existingReading?.patientId}
+              >
+                <option value="">Select Patient</option>
+                
+                {(existingReading?.patientId ? allPatients : availablePatients).map(patient => (
+                  <option key={patient.id} value={patient.id} className='focus: font-semibold'>
+                    {patient.name} 
+                    {/* ({patient.patientCode}) To show Patient code along name */}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Patient Photo */}
+            {selectedPatient && (
+              <div className="flex-shrink-0 mr-10">
+                {selectedPatient.photo ? (
+                  <img 
+                    src={selectedPatient.photo} 
+                    alt={selectedPatient.name}
+                    className="w-24 h-24 rounded-full object-cover 
+                              border-2 border-white shadow-md rounded-lg p-3 bg-gray-50"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-blue-200 border-2 border-white shadow-lg flex items-center justify-center">
+                    <UserCircle2Icon strokeWidth={0.8} color='rgba(0, 81, 255, 0.83)' className="w-24 h-24 text-blue-600" />
+                  </div>
+                )}
+              </div>            
+            )}
+
           </div>
 
           {/* Patient Details */}
           {selectedPatient && (
-            <div className="mb-6 border border-gray-300 rounded-lg p-6">
-              <div className="flex items-start gap-6">
-                {/* Patient Photo */}
-                <div className="flex-shrink-0">
-                  {selectedPatient.photo ? (
-                    <img 
-                      src={selectedPatient.photo} 
-                      alt={selectedPatient.name}
-                      className="w-24 h-24 rounded-full object-cover 
-                                border-4 border-white shadow-md rounded-lg p-3 bg-gray-50"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-blue-200 border-4 border-white shadow-lg flex items-center justify-center">
-                      <User className="w-12 h-12 text-blue-600" />
-                    </div>
-                  )}
-                </div>
+            <div>
+              <label className="block text-base font-semibold text-gray-900 mb-2 ">
+                Patient Details
+              </label>
 
-                {/* Patient Info */}
-                <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Patient ID</p>
-                    <p className="text-gray-900 text-md">{selectedPatient.patientCode}</p> {/*old : patientId*/}
-                  </div>
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Patient Name</p>
-                    <p className="text-gray-900 text-md">{selectedPatient.name}</p>
-                  </div>
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Age / Gender</p>
-                    <p className="text-gray-900 text-md">{selectedPatient.age} / {selectedPatient.gender}</p>
-                  </div>
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Contact</p>
-                    <p className="text-gray-900 text-md">{selectedPatient.contact}</p>
-                  </div>
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Last Visit</p>
-                    <p className="text-gray-900 text-md">{formatDate(selectedPatient.lastVisitDate)}</p>
-                  </div>
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Next Visit</p>
-                    <p className="text-gray-900 text-md">{formatDate(selectedPatient.nextCheckupDate)?? 'Not scheduled'}</p>
-                  </div>
-                  <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Status</p>
-                    <p className="text-gray-900 text-md">{selectedPatient.status || 'Active'}</p>
-                  </div>
-                  <div className="md:col-span-4 shadow-sm rounded-lg p-3 bg-gray-50">
-                    <p className="text-gray-900 font-medium">Diagnosis</p>
-                    <p className="text-gray-900 text-md">{selectedPatient.diagnosis}</p>
+              <div className="mb-6 border border-gray-300 rounded-lg p-6 bg-gray-50 shadow-sm">    
+                <div className="flex items-start gap-6">
+                  {/* Patient Info */}
+                  <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Patient ID</p>
+                      <p className="text-gray-900 text-md">{selectedPatient.patientCode}</p> {/*old : patientId*/}
+                    </div>
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Patient Name</p>
+                      <p className="text-gray-900 text-md">{selectedPatient.name}</p>
+                    </div>
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Age / Gender</p>
+                      <p className="text-gray-900 text-md">{selectedPatient.age} / {selectedPatient.gender}</p>
+                    </div>
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Contact</p>
+                      <p className="text-gray-900 text-md">{selectedPatient.contact}</p>
+                    </div>
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Last Visit</p>
+                      <p className="text-gray-900 text-md">{formatDate(selectedPatient.lastVisitDate)}</p>
+                    </div>
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Next Visit</p>
+                      <p className="text-gray-900 text-md">{formatDate(selectedPatient.nextCheckupDate)?? 'Not scheduled'}</p>
+                    </div>
+                    <div className="md:col-span-1 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Status</p>
+                      <p className="text-gray-900 text-md">{selectedPatient.status || 'Active'}</p>
+                    </div>
+                    <div className="md:col-span-4 shadow-sm rounded-lg p-3 bg-gray-50">
+                      <p className="text-gray-900 font-medium">Diagnosis</p>
+                      <p className="text-gray-900 text-md">{selectedPatient.diagnosis}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -296,7 +415,7 @@ export function AlgometerReadingInterface({
 
           {/* Doctor's Notes */}
           <div className="mb-4">
-            <label className="block text-md font-medium text-gray-900 mb-2">Doctor's Notes</label>
+            <label className="block text-base font-semibold text-gray-900 mb-2">Doctor's Notes</label>
             <textarea
               value={doctorNotes}
               onChange={(e) => setDoctorNotes(e.target.value)}
@@ -309,9 +428,10 @@ export function AlgometerReadingInterface({
           
           {/* Readings Table */}
           <div className="py-1 w-full mb-6">
-            <label className="block text-md font-medium text-gray-900 mb-2">Algometer Readings</label>
+            <label className="block text-base font-semibold text-gray-900 mb-2">Algometer Readings</label>
             <ReadingTable rows={sessionReadings} 
-              onRowsChange={setSessionReadings}/>
+              onRowsChange={setSessionReadings}
+              sessionActive={sessionActive} />
           </div>
           
           {/* Reference Guide */}

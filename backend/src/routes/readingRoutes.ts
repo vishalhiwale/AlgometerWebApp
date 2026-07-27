@@ -1,12 +1,16 @@
 import express from "express";
 import Reading from "../models/Reading";
+import {protect, AuthRequest} from "../middleware/authMiddleware";
 
 const router = express.Router();
 
 // Create new reading session
-router.post("/", async (req, res) => {
+router.post("/", protect, async (req: AuthRequest, res) => {
   try {
-    const reading = new Reading(req.body);
+    const reading = new Reading({
+      ...req.body,
+      userId: req.user!.id
+    });
     const savedReading = await reading.save();
     res.status(201).json(savedReading);
   } catch (error) {
@@ -17,9 +21,26 @@ router.post("/", async (req, res) => {
 
 
 // to get only saved readings
-router.get("/saved", async (req, res) => {
+router.get("/saved", protect, async (req: AuthRequest, res) => {
   try {
-    const readings = await Reading.find({ status: "saved" });
+    const readings = await Reading.find({
+      status: "saved",
+      userId: req.user!.id
+    });
+
+    res.json(readings);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching saved readings" });
+  }
+});
+
+// to get only all readings
+router.get("/readings", protect, async (req: AuthRequest, res) => {
+  try {
+    const readings = await Reading.find({
+      userId: req.user!.id
+    });
+
     res.json(readings);
   } catch (error) {
     res.status(500).json({ message: "Error fetching saved readings" });
@@ -27,10 +48,11 @@ router.get("/saved", async (req, res) => {
 });
 
 // Get readings for a patient
-router.get("/:patientId", async (req, res) => {
+router.get("/:patientId", protect, async (req: AuthRequest, res) => {
   try {
     const readings = await Reading.find({
-      patientId: req.params.patientId
+      patientId: req.params.patientId,
+      userId: req.user!.id
     }).sort({ createdAt: -1 });
 
     res.json(readings);
@@ -40,10 +62,13 @@ router.get("/:patientId", async (req, res) => {
   }
 });
 
-
-router.put("/:id", async (req, res) => {
+// Update Reading
+router.put("/:id", protect, async (req: AuthRequest, res) => {
   try {
-    const existing = await Reading.findById(req.params.id);
+    const existing = await Reading.findOne({
+      _id: req.params.id,
+      userId: req.user!.id
+    });
     
     if (!existing) {
       return res.status(404).json({ error: "Reading not found" });
@@ -53,8 +78,11 @@ router.put("/:id", async (req, res) => {
       return res.status(403).json({ error: "Committed readings cannot be modified" });
     }
     
-    const updated = await Reading.findByIdAndUpdate(
-      req.params.id,
+    const updated = await Reading.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        userId: req.user!.id
+      },
       req.body,
       { new: true }
     );
@@ -67,19 +95,36 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+// Delete Reading
+router.delete("/:id", protect, async (req: AuthRequest, res) => {
   try {
-    const existing = await Reading.findById(req.params.id);
+    console.log("DELETE route hit", req.params.id);
+    console.log("DELETE id:", req.params.id);
+
+    const existing = await Reading.findOne({
+      _id: req.params.id,
+      userId: req.user!.id
+    });
     
+    console.log("Found:", existing);
+
     if (!existing) {
       return res.status(404).json({ error: "Reading not found" });
     }
     
-    if (existing.status === "committed") {
-      return res.status(403).json({ error: "Committed readings cannot be deleted" });
-    }
+    // if (existing.status === "committed") {
+    //   // return res.status(403).json({ error: "Committed readings cannot be deleted" });
+    //   if(confirm("really")){
+    //     console.log('Commited reading delete');
+    //   }
+    //   return;
+    // }
     
-    await Reading.findByIdAndDelete(req.params.id);
+    await Reading.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user!.id
+    });
+    // await Reading.findOneAndDelete(req.params.id);
     
     res.json({ message: "Reading deleted successfully" });
     
@@ -88,4 +133,5 @@ router.delete("/:id", async (req, res) => {
     res.status(400).json({ error: "Failed to delete reading" });
   }
 });
+
 export default router;
