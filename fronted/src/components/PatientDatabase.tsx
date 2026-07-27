@@ -189,7 +189,7 @@ const filteredPatients = patients.filter((patient) => {
   };
 
   return (
-    <div className="space-y-6 min-h-screen">
+    <div className="space-y-6 ml-3">
       <div>
         {/* <h2 className="text-gray-900">Patient Database</h2> */}
         <div className="flex justify-between items-center">

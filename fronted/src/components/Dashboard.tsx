@@ -324,7 +324,7 @@ export function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ml-3">
       <div>
         <h2 className="text-2xl font-bold text-gray-700 tracking-tight">Dashboard Overview</h2>
         {/* <p className="text-gray-600 mt-1">Real-time analytics and patient statistics</p> */}
@@ -484,7 +484,7 @@ export function Dashboard() {
         </div>
 
         {/* Recent Measurements Trend */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+        {/* <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
           <h3 className="text-gray-900 text-lg font-semibold mb-4">Recent Algometer Measurements (N/cm²)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={recentMeasurements}>
@@ -499,7 +499,7 @@ export function Dashboard() {
               <Line type="monotone" dataKey="masseter" stroke="#ef4444" name="Masseter" />
             </LineChart>
           </ResponsiveContainer>
-        </div>
+        </div> */}
       </div>
     </div>
   );

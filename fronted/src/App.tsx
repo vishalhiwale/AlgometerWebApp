@@ -472,7 +472,7 @@ export default function App() {
         <nav className={`flex-shrink-0 bg-gray-100 shadow-sm h-full p-4 transition-all duration-300 
                         relative ${isCollapsed ? 'w-20 min-w-[5rem] p-2' : 'w-64 min-w-[16rem] p-4'} overflow-y-auto`}>
           
-          <div className={`w-full flex items-center mb-4 ${isCollapsed? 'justify-center' : 'justify-end'}`}>
+          <div className={`w-full flex items-center mb-4 ${isCollapsed? 'justify-center' : 'justify-start'}`}>
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
               className={`p-3 flex items-center rounded-lg hover:bg-gray-200 text-gray-700 text-center transition-colors ${
@@ -480,11 +480,13 @@ export default function App() {
                 }`}
               aria-label={isCollapsed? "Expand sidebar" : "Collapse sidebar"}
             >
-
-            <span className={`transition-opacity duration-600 whitespace-nowrap ${isCollapsed ? 'hidden' : 'block'}`}>
-              Menu
-            </span>
+              {/* Icon */}
               {isCollapsed? <MenuSquare className='w-5 h-5 transition-all duration-600'/> : <MenuSquare className='w-5 h-5 rotate-90 transition-all duration-600'/>}
+              {/* Menu Text */}
+              <span className={`transition-opacity duration-600 whitespace-nowrap ${isCollapsed ? 'hidden' : 'block'}`}>
+                Menu
+              </span>
+
             </button>
           </div>
           

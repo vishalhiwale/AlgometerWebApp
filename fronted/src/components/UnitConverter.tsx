@@ -80,7 +80,7 @@ export function UnitConverter() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ml-3">
       <div>
         {/* <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Unit Converter</h1> */}
         <h2 className="text-2xl font-bold text-gray-700 tracking-tight">Unit Converter</h2>

@@ -5,6 +5,7 @@ import { Patient, AlgometerReading } from '../types/algometer';
 import React from 'react';
 import api from '../services/api';
 import { toast } from 'sonner';
+import { convertPressure } from '../utils/pressureUnit';
 
 interface PatientDetailProps {
   patientId: string;
@@ -34,6 +35,15 @@ export function PatientDetail({
   const sortedReadings = [...readings].sort((a, b) => 
     new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );
+
+  // set Pressure Unit
+  const [pressureUnit, setPressureUnit] = React.useState(
+    localStorage.getItem("pressureUnit") || "kPa"
+  );
+
+  React.useEffect(() => {
+    localStorage.setItem("pressureUnit", pressureUnit);
+  }, [pressureUnit]);
 
   // Get the latest reading
   const latestReading = sortedReadings[sortedReadings.length - 1];
@@ -88,10 +98,10 @@ export function PatientDetail({
     // Add PPT and PPTol for each muscleName
     reading.readings.forEach(lr => {
       if (lr.threshold !== null) {
-        dataPoint[`${lr.muscleName}_PPT`] = lr.threshold;
+        dataPoint[`${lr.muscleName}_PPT`] = `${convertPressure(lr.threshold, pressureUnit)?.toFixed(2)}`;
       }
       if (lr.tolerance !== null) {
-        dataPoint[`${lr.muscleName}_PPTol`] = lr.tolerance;
+        dataPoint[`${lr.muscleName}_PPTol`] = `${convertPressure(lr.tolerance, pressureUnit)?.toFixed(2)}`;
       }
     });
     
@@ -101,8 +111,8 @@ export function PatientDetail({
   // Prepare data for Current Pain Map (Radar chart) - using latest reading
   const radarData = latestReading?.readings.slice(0, 6).map(r => ({
     muscleName: r.muscleName,
-    PPT: r.threshold ?? undefined,
-    PPTol: r.tolerance ?? undefined
+    PPT: `${convertPressure(r.threshold, pressureUnit)?.toFixed(2)}` ,
+    PPTol:`${convertPressure(r.threshold, pressureUnit)?.toFixed(2)}`
   })) || [];
 
   // Prepare measurement points for body diagram
@@ -190,6 +200,24 @@ export function PatientDetail({
             Take Algometer Readings
           </button>
         )}
+        {
+          <select
+            value={pressureUnit}
+            onChange={(e) => {setPressureUnit(e.target.value),
+              localStorage.setItem("pressureUnit", e.target.value)}
+            }
+            // id='options'
+            className="px-4 py-2 appearance-none bg-gray-200 text-black font-semibold rounded-lg hover:bg-gray-200 transition-colors flex items-center"
+            // className="block w-full rounded-md border border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+          >
+            <option value="kPa">kPa</option>
+            <option value="Pa">Pa (N/m²)</option>
+            <option value="MPa">MPa</option>
+            <option value="N/cm²">N/cm²</option>
+            <option value="kgf/cm²">kgf/cm²</option>
+            <option value="psi">psi</option>
+          </select>
+        }
         {onEditPatient && (
           <button
             onClick={onEditPatient}
@@ -283,10 +311,12 @@ export function PatientDetail({
                   <p className="text-gray-900 text-md font-medium mb-2">{reading.muscleName}</p>
                   <div className="space-y-1">
                     <p className="text-grey-900">
-                      <span className="text-md text-gray-600">Threshold:</span> {reading.threshold !== null ? `${reading.threshold} kPa` : 'N/A'}
+                      {/* <span className="text-md text-gray-600">Threshold:</span> {reading.threshold !== null ? `${reading.threshold} kPa` : 'N/A'} */}
+                      <span className="text-md text-gray-600">Threshold:</span> {reading.threshold !== null ? `${convertPressure(reading.threshold, pressureUnit)?.toFixed(2)} ${pressureUnit}` : 'N/A'}
                     </p>
                     <p className="text-grey-900">
-                      <span className="text-md text-gray-600">Tolerance:</span> {reading.tolerance !== null ? `${reading.tolerance} kPa` : 'N/A'}
+                      {/* <span className="text-md text-gray-600">Tolerance:</span> {reading.tolerance !== null ? `${reading.tolerance} kPa` : 'N/A'} */}
+                      <span className="text-md text-gray-600">Tolerance:</span> {reading.tolerance !== null ? `${convertPressure(reading.tolerance, pressureUnit)?.toFixed(2)} ${pressureUnit}` : 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -349,10 +379,10 @@ export function PatientDetail({
                         
                         <div className="space-y-0 ml-2 text-sm">
                           <p className="text-grey-900">
-                            <span className="text-gray-600">Threshold:</span> {r.threshold !== null ? `${r.threshold} kPa` : 'N/A'}
+                            <span className="text-gray-600">Threshold:</span> {r.threshold !== null ? `${convertPressure(r.threshold, pressureUnit)?.toFixed(2)} ${pressureUnit}` : 'N/A'}
                           </p>
                           <p className="text-grey-900">
-                            <span className="text-gray-600">Tolerance:</span> {r.tolerance !== null ? `${r.tolerance} kPa` : 'N/A'}
+                            <span className="text-gray-600">Tolerance:</span> {r.tolerance !== null ? `${convertPressure(r.tolerance, pressureUnit)?.toFixed(2)} ${pressureUnit}` : 'N/A'}
                           </p>
                         </div>
                       </div>
@@ -384,7 +414,7 @@ export function PatientDetail({
 
                 <h3 className="text-gray-900 text-md flex items-center gap-2 font-bold">
                   <TrendingUp className="w-5 h-5" />
-                  Pain Threshold Progression (kPa)
+                  {`Pain Threshold Progression (${pressureUnit})`}
                 </h3>
 
 
@@ -489,7 +519,7 @@ export function PatientDetail({
                       }}                      
                       itemStyle={{ fontWeight: 400 }}
                       labelStyle={{ fontWeight: 600 }}
-                      formatter={(value, name) => [`${value} kPa`, name]}
+                      formatter={(value, name) => [`${value} ${pressureUnit}`, name]}
                       cursor={{ stroke: '#9ca3af', strokeWidth: 1 }}
                     />
                     {/* <Legend 
@@ -579,7 +609,7 @@ export function PatientDetail({
                       fillOpacity={0.25} 
                     />
                     <Tooltip 
-                      formatter={(value, name) => [`${value} kPa`, name]}
+                      formatter={(value, name) => [`${value} ${pressureUnit}`, name]}
                       contentStyle={{ 
                         fontSize: '14px',
                         textAlign: 'left',
